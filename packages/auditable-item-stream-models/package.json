@@ -4,7 +4,7 @@
 	"description": "Shared data contracts, schemas, and topic constants for auditable item stream components.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/twinfoundation/auditable-item-stream.git",
+		"url": "git+https://github.com/iotaledger/auditable-item-stream.git",
 		"directory": "packages/auditable-item-stream-models"
 	},
 	"author": "martyn.janes@iota.org",
@@ -83,7 +83,7 @@
 		"schemas"
 	],
 	"bugs": {
-		"url": "git+https://github.com/twinfoundation/auditable-item-stream/issues"
+		"url": "git+https://github.com/iotaledger/auditable-item-stream/issues"
 	},
 	"homepage": "https://twindev.org"
 }
