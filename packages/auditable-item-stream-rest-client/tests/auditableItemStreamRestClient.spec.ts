@@ -17,18 +17,16 @@ describe("AuditableItemStreamRestClient", () => {
 	test("Uses route paths that match auditable item stream routes", async () => {
 		const client = new AuditableItemStreamRestClient({ endpoint: "http://localhost:8080" });
 
-		const fetchSpy = vi
-			.spyOn(client as unknown as { fetch: (...args: unknown[]) => Promise<unknown> }, "fetch")
-			.mockResolvedValue({
-				headers: {
-					[HeaderTypes.Location]: "ais:stream-id:entry-id"
-				},
-				body: {
-					"@context": [],
-					type: "ItemList",
-					itemListElement: []
-				}
-			} as never);
+		const fetchSpy = vi.spyOn(client, "fetch").mockResolvedValue({
+			headers: {
+				[HeaderTypes.Location]: "ais:stream-id:entry-id"
+			},
+			body: {
+				"@context": [],
+				type: "ItemList",
+				itemListElement: []
+			}
+		});
 
 		await client.create({
 			"@context": [

@@ -106,7 +106,7 @@ function expectImmutableProof(immutableProof: IImmutableProof, created: string):
 	expect(typeof proofValue).toBe("string");
 	expect((proofValue as string).length).toBeGreaterThan(0);
 	// base58btc encoded values typically start with 'z'
-	expect(proofValue as string).toMatch(/^z[1-9A-HJ-NP-Za-km-z]+$/);
+	expect(proofValue).toMatch(/^z[1-9A-HJ-NP-Za-km-z]+$/);
 }
 
 /**
