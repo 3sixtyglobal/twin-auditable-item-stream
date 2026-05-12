@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.15](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.14...auditable-item-stream-service-v0.0.3-next.15) (2026-05-12)
+
+
+### Features
+
+* typescript 6 update ([eb9a4db](https://github.com/iotaledger/twin-auditable-item-stream/commit/eb9a4db5dc693602464ab11b55759a3e86d1ecab))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.14 to 0.0.3-next.15
+
 ## [0.0.3-next.14](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.13...auditable-item-stream-service-v0.0.3-next.14) (2026-04-16)
 
 
