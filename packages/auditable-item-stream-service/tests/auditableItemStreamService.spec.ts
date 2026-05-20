@@ -42,7 +42,6 @@ import {
 	TEST_NODE_IDENTITY,
 	TEST_ORGANIZATION_IDENTITY,
 	TEST_TENANT_IDENTITY,
-	TEST_TENANT_IDENTITY_SHORT,
 	TEST_USER_IDENTITY
 } from "./setupTestEnv.js";
 import { AuditableItemStreamService } from "../src/auditableItemStreamService.js";
@@ -257,7 +256,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(streamStore).toMatchObject([
 			{
-				partitionId: TEST_TENANT_IDENTITY_SHORT,
 				id: "019179f0e5af71018101010101010101",
 				dateModified: "2024-08-22T11:56:56.272Z",
 				organizationIdentity: TEST_ORGANIZATION_IDENTITY,
@@ -276,7 +274,6 @@ describe("AuditableItemStreamService", () => {
 		const verifiableStore = verifiableStorage.getStore();
 		expect(verifiableStore).toHaveLength(1);
 		expect(verifiableStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0505050505050505050505050505050505050505050505050505050505050505",
@@ -332,7 +329,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -352,7 +348,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -365,7 +360,6 @@ describe("AuditableItemStreamService", () => {
 			index: 0
 		});
 		expect(entryStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -383,14 +377,12 @@ describe("AuditableItemStreamService", () => {
 		const verifiableStore = verifiableStorage.getStore();
 		expect(verifiableStore).toHaveLength(2);
 		expect(verifiableStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0909090909090909090909090909090909090909090909090909090909090909",
 			maxAllowListSize: 100
 		});
 		expect(verifiableStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -448,7 +440,6 @@ describe("AuditableItemStreamService", () => {
 		const streamStore = streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -466,7 +457,6 @@ describe("AuditableItemStreamService", () => {
 		const entryStore = streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -478,7 +468,6 @@ describe("AuditableItemStreamService", () => {
 			index: 0
 		});
 		expect(entryStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -613,14 +602,12 @@ describe("AuditableItemStreamService", () => {
 		const verifiableStore = verifiableStorage.getStore();
 		expect(verifiableStore).toHaveLength(2);
 		expect(verifiableStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0909090909090909090909090909090909090909090909090909090909090909",
 			maxAllowListSize: 100
 		});
 		expect(verifiableStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -779,9 +766,18 @@ describe("AuditableItemStreamService", () => {
 		});
 
 		const entryStore = streamEntryStorage.getStore();
-		entryStore[0].dateCreated = new Date(FIRST_TICK).toISOString();
-		entryStore[1].dateCreated = new Date(SECOND_TICK).toISOString();
-		entryStore[2].dateCreated = new Date(SECOND_TICK + 1000).toISOString();
+		await streamEntryStorage.set({
+			...entryStore[0],
+			dateCreated: new Date(FIRST_TICK).toISOString()
+		});
+		await streamEntryStorage.set({
+			...entryStore[1],
+			dateCreated: new Date(SECOND_TICK).toISOString()
+		});
+		await streamEntryStorage.set({
+			...entryStore[2],
+			dateCreated: new Date(SECOND_TICK + 1000).toISOString()
+		});
 
 		await waitForProofGeneration(4);
 
@@ -907,7 +903,6 @@ describe("AuditableItemStreamService", () => {
 		const streamStore = streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			organizationIdentity: TEST_ORGANIZATION_IDENTITY,
 			userIdentity: TEST_USER_IDENTITY,
@@ -926,7 +921,6 @@ describe("AuditableItemStreamService", () => {
 		const entryStore = streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -939,7 +933,6 @@ describe("AuditableItemStreamService", () => {
 			index: 0
 		});
 		expect(entryStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -955,14 +948,12 @@ describe("AuditableItemStreamService", () => {
 		const verifiableStore = verifiableStorage.getStore();
 		expect(verifiableStore).toHaveLength(2);
 		expect(verifiableStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0909090909090909090909090909090909090909090909090909090909090909",
 			maxAllowListSize: 100
 		});
 		expect(verifiableStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
@@ -1031,7 +1022,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			organizationIdentity: TEST_ORGANIZATION_IDENTITY,
 			userIdentity: TEST_USER_IDENTITY,
@@ -1053,7 +1043,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(entryStore).toHaveLength(3);
 		expect(entryStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -1066,7 +1055,6 @@ describe("AuditableItemStreamService", () => {
 			index: 0
 		});
 		expect(entryStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -1078,7 +1066,6 @@ describe("AuditableItemStreamService", () => {
 			index: 1
 		});
 		expect(entryStore[2]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			entryObject: {
@@ -1095,14 +1082,12 @@ describe("AuditableItemStreamService", () => {
 		const verifiableStore = verifiableStorage.getStore();
 		expect(verifiableStore).toHaveLength(2);
 		expect(verifiableStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
 			maxAllowListSize: 100
 		});
 		expect(verifiableStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			allowList: [TEST_ORGANIZATION_IDENTITY],
 			creator: TEST_ORGANIZATION_IDENTITY,
 			id: "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
@@ -1467,7 +1452,6 @@ describe("AuditableItemStreamService", () => {
 
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -1573,7 +1557,6 @@ describe("AuditableItemStreamService", () => {
 		const streamStore = streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -1650,7 +1633,6 @@ describe("AuditableItemStreamService", () => {
 		const streamEntityId = getStreamEntityId(streamId);
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -1719,7 +1701,6 @@ describe("AuditableItemStreamService", () => {
 		const streamStore = streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -1804,7 +1785,6 @@ describe("AuditableItemStreamService", () => {
 		const streamStore = streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			id: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
 			dateModified: "2024-08-22T11:56:56.272Z",
@@ -1822,10 +1802,8 @@ describe("AuditableItemStreamService", () => {
 		const streamEntryStore = streamEntryStorage.getStore();
 		expect(streamEntryStore).toHaveLength(2);
 		expect(streamEntryStore[0]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
-			dateDeleted: undefined,
 			entryObject: {
 				"@context": "https://www.w3.org/ns/activitystreams",
 				"@type": "Note",
@@ -1835,10 +1813,8 @@ describe("AuditableItemStreamService", () => {
 			index: 0
 		});
 		expect(streamEntryStore[1]).toMatchObject({
-			partitionId: TEST_TENANT_IDENTITY_SHORT,
 			streamId: streamEntityId,
 			dateCreated: "2024-08-22T11:56:56.272Z",
-			dateDeleted: undefined,
 			entryObject: {
 				"@context": "https://www.w3.org/ns/activitystreams",
 				"@type": "Note",

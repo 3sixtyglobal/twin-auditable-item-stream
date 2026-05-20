@@ -245,10 +245,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			// Create the JSON-LD object we want to use for the proof
 			// this is a subset of fixed properties from the stream object.
 			const streamModel = this.streamEntityToJsonLd(
-				ObjectHelper.pick(
-					streamEntity,
-					AuditableItemStreamService._PROOF_KEYS_STREAM
-				) as AuditableItemStream
+				ObjectHelper.pick(streamEntity, AuditableItemStreamService._PROOF_KEYS_STREAM)
 			);
 
 			// Create the proof for the stream object
@@ -1367,10 +1364,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			// Create the JSON-LD object we want to use for the proof
 			// this is a subset of fixed properties from the stream entry object.
 			const streamEntryModel = this.streamEntryEntityToJsonLd(
-				ObjectHelper.pick(
-					entity,
-					AuditableItemStreamService._PROOF_KEYS_STREAM_ENTRY
-				) as AuditableItemStreamEntry
+				ObjectHelper.pick(entity, AuditableItemStreamService._PROOF_KEYS_STREAM_ENTRY)
 			);
 
 			// Create the proof for the stream object
