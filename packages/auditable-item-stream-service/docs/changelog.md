@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.16](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.15...auditable-item-stream-service-v0.0.3-next.16) (2026-05-20)
+
+
+### Features
+
+* update dependencies ([24ececa](https://github.com/iotaledger/twin-auditable-item-stream/commit/24ececa966a408c03e6e7d9de4236182f318f431))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.15 to 0.0.3-next.16
+
 ## [0.0.3-next.15](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.14...auditable-item-stream-service-v0.0.3-next.15) (2026-05-12)
 
 
