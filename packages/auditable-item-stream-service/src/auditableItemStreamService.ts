@@ -3,6 +3,8 @@
 import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamDataTypes,
+	AuditableItemStreamMetricIds,
+	AuditableItemStreamMetrics,
 	AuditableItemStreamModes,
 	AuditableItemStreamTopics,
 	AuditableItemStreamTypes,
@@ -65,6 +67,7 @@ import {
 	SchemaOrgDataTypes,
 	SchemaOrgTypes
 } from "@twin.org/standards-schema-org";
+import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
 import type { AuditableItemStream } from "./entities/auditableItemStream.js";
 import type { AuditableItemStreamEntry } from "./entities/auditableItemStreamEntry.js";
 import type { IAuditableItemStreamServiceConfig } from "./models/IAuditableItemStreamServiceConfig.js";
@@ -141,6 +144,12 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	private readonly _eventBusComponent?: IEventBusComponent;
 
 	/**
+	 * The telemetry component.
+	 * @internal
+	 */
+	private readonly _telemetryComponent?: ITelemetryComponent;
+
+	/**
 	 * The default interval for the integrity checks.
 	 * @internal
 	 */
@@ -167,6 +176,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			this._eventBusComponent = ComponentFactory.get(options.eventBusComponentType);
 		}
 
+		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
+			options?.telemetryComponentType
+		);
+
 		this._config = options?.config ?? {};
 		this._defaultImmutableInterval = this._config.defaultImmutableInterval ?? 10;
 
@@ -182,6 +195,16 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 */
 	public className(): string {
 		return AuditableItemStreamService.CLASS_NAME;
+	}
+
+	/**
+	 * Register all AIS metrics with the telemetry component.
+	 */
+	public async start(): Promise<void> {
+		if (Is.undefined(this._telemetryComponent)) {
+			return;
+		}
+		await MetricHelper.createMetrics(this._telemetryComponent, AuditableItemStreamMetrics);
 	}
 
 	/**
@@ -251,6 +274,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			// Create the proof for the stream object
 			if (context.immutableInterval > 0) {
 				streamEntity.proofId = await this._immutableProofComponent.create(streamModel);
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ProofsCreatedStream
+				);
 			}
 
 			if (Is.arrayValue(stream.entries?.[SchemaOrgTypes.ItemListElement])) {
@@ -265,6 +292,15 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
+
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.StreamsCreated,
+				{
+					mode: streamEntity.mode ?? AuditableItemStreamModes.Default,
+					immutableInterval: context.immutableInterval
+				}
+			);
 
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamCreated>(
 				AuditableItemStreamTopics.StreamCreated,
@@ -312,6 +348,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				streamEntity.dateModified = new Date(Date.now()).toISOString();
 
 				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.StreamsClosed
+				);
 
 				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamUpdated>(
 					AuditableItemStreamTopics.StreamUpdated,
@@ -384,6 +425,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				streamEntity.dateModified = new Date(Date.now()).toISOString();
 
 				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.StreamsUpdated
+				);
 
 				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamUpdated>(
 					AuditableItemStreamTopics.StreamUpdated,
@@ -518,6 +564,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 			await this._streamStorage.remove(streamEntity.id);
 
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.StreamsDeleted
+			);
+
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamDeleted>(
 				AuditableItemStreamTopics.StreamDeleted,
 				{ id }
@@ -650,6 +701,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			if (streamEntity.closed) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ClosedStreamRejections,
+					{ operation: "createEntry" }
+				);
 				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "streamClosed", {
 					id: streamId
 				});
@@ -670,6 +726,16 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
+
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.EntriesCreated,
+				{
+					hasProof:
+						context.immutableInterval > 0 &&
+						(context.indexCounter - 1) % context.immutableInterval === 0
+				}
+			);
 
 			const fullId = new Urn(AuditableItemStreamService._NAMESPACE, [
 				streamEntity.id,
@@ -882,12 +948,22 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			if (streamEntity.closed) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ClosedStreamRejections,
+					{ operation: "updateEntry" }
+				);
 				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "streamClosed", {
 					id: streamId
 				});
 			}
 
 			if (streamEntity.mode === AuditableItemStreamModes.AppendOnly) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.AppendOnlyRejections,
+					{ operation: "updateEntry" }
+				);
 				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "appendOnlyNoEntryUpdates", {
 					id: streamId
 				});
@@ -919,6 +995,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
+
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.EntriesUpdated
+			);
 
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamEntryUpdated>(
 				AuditableItemStreamTopics.StreamEntryUpdated,
@@ -981,6 +1062,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			if (streamEntity.mode === AuditableItemStreamModes.AppendOnly) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.AppendOnlyRejections,
+					{ operation: "removeEntry" }
+				);
 				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "appendOnlyNoEntryRemovals", {
 					id: streamId
 				});
@@ -1012,6 +1098,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				streamEntity.dateModified = context.now;
 				streamEntity.numberOfItems = context.indexCounter;
 				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.EntriesDeleted
+				);
 
 				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamEntryDeleted>(
 					AuditableItemStreamTopics.StreamEntryDeleted,
@@ -1371,6 +1462,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			entity.proofId = await this._immutableProofComponent.create(
 				JsonLdHelper.toNodeObject(streamEntryModel)
 			);
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.ProofsCreatedEntry,
+				{ index: entity.index }
+			);
 		}
 
 		await this._streamEntryStorage.set(entity);
@@ -1568,6 +1664,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			delete streamEntity.proofId;
 
 			await this._streamStorage.set(streamEntity);
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.ProofsRemovedStream
+			);
 		}
 
 		const entryIds: string[] = [];
@@ -1594,6 +1694,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				if (Is.stringValue(streamEntry.proofId)) {
 					await this._immutableProofComponent.removeVerifiable(streamEntry.proofId);
 					delete streamEntry.proofId;
+
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						AuditableItemStreamMetricIds.ProofsRemovedEntry
+					);
 
 					// If we are only removing the proof, we need to set the entry
 					// otherwise the entry is going to be removed later anyway.
