@@ -45,6 +45,7 @@
 ## Type Aliases
 
 - [AuditableItemStreamContexts](type-aliases/AuditableItemStreamContexts.md)
+- [AuditableItemStreamMetricIds](type-aliases/AuditableItemStreamMetricIds.md)
 - [AuditableItemStreamModes](type-aliases/AuditableItemStreamModes.md)
 - [AuditableItemStreamTopics](type-aliases/AuditableItemStreamTopics.md)
 - [AuditableItemStreamTypes](type-aliases/AuditableItemStreamTypes.md)
@@ -52,6 +53,8 @@
 ## Variables
 
 - [AuditableItemStreamContexts](variables/AuditableItemStreamContexts.md)
+- [AuditableItemStreamMetricIds](variables/AuditableItemStreamMetricIds.md)
+- [AuditableItemStreamMetrics](variables/AuditableItemStreamMetrics.md)
 - [AuditableItemStreamModes](variables/AuditableItemStreamModes.md)
 - [AuditableItemStreamTopics](variables/AuditableItemStreamTopics.md)
 - [AuditableItemStreamTypes](variables/AuditableItemStreamTypes.md)

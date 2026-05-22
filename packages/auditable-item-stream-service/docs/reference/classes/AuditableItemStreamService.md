@@ -54,6 +54,22 @@ The class name of the component.
 
 ***
 
+### start() {#start}
+
+> **start**(): `Promise`\<`void`\>
+
+Register all AIS metrics with the telemetry component.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Implementation of
+
+`IAuditableItemStreamComponent.start`
+
+***
+
 ### create() {#create}
 
 > **create**(`stream`): `Promise`\<`string`\>
