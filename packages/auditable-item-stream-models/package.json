@@ -1,6 +1,6 @@
 {
 	"name": "@twin.org/auditable-item-stream-models",
-	"version": "0.0.3-next.17",
+	"version": "0.0.3-next.18",
 	"description": "Shared data contracts, schemas, and topic constants for auditable item stream components.",
 	"repository": {
 		"type": "git",

@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.18](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.0.3-next.17...auditable-item-stream-rest-client-v0.0.3-next.18) (2026-05-29)
+
+
+### Features
+
+* update immutable proof usage ([#71](https://github.com/iotaledger/twin-auditable-item-stream/issues/71)) ([1fd7c16](https://github.com/iotaledger/twin-auditable-item-stream/commit/1fd7c1666ef77f96e807a9d944e0f31b8f043ae6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.17 to 0.0.3-next.18
+
 ## [0.0.3-next.17](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.0.3-next.16...auditable-item-stream-rest-client-v0.0.3-next.17) (2026-05-22)
 
 
