@@ -15,7 +15,7 @@
 			"removingEntryFailed": "Removing entry from the Auditable Item Stream failed",
 			"gettingEntriesFailed": "Getting entries from the Auditable Item Stream failed",
 			"gettingEntryObjectsFailed": "Getting entry objects from the Auditable Item Stream failed",
-			"removeVerifiableFailed": "Removing verifiable storage from the Auditable Item Stream failed",
+			"removeProofFailed": "Removing proof from the Auditable Item Stream failed",
 			"closedRequiresEntries": "A stream can only be created as closed when entries are provided",
 			"streamClosed": "The stream with the Id \"{id}\" is closed and does not allow entry updates",
 			"appendOnlyNoEntryUpdates": "Entries in append-only mode cannot be updated for stream \"{id}\"",

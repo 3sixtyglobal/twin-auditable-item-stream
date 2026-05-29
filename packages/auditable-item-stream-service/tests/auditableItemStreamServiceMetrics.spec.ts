@@ -30,18 +30,18 @@ import {
 } from "@twin.org/immutable-proof-service";
 import { ModuleHelper } from "@twin.org/modules";
 import { nameof } from "@twin.org/nameof";
+import {
+	EntityStorageNotarizationConnector,
+	initSchema as initSchemaNotarization,
+	type Notarization
+} from "@twin.org/notarization-connector-entity-storage";
+import { NotarizationConnectorFactory } from "@twin.org/notarization-models";
 import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
 import {
 	MetricType,
 	type ITelemetryComponent,
 	type ITelemetryMetric
 } from "@twin.org/telemetry-models";
-import {
-	EntityStorageVerifiableStorageConnector,
-	initSchema as initSchemaVerifiableStorage,
-	type VerifiableItem
-} from "@twin.org/verifiable-storage-connector-entity-storage";
-import { VerifiableStorageConnectorFactory } from "@twin.org/verifiable-storage-models";
 import {
 	cleanupTestEnv,
 	setupTestEnv,
@@ -57,6 +57,7 @@ import { initSchema } from "../src/schema.js";
 
 const FIRST_TICK = 1724327716271;
 const SECOND_TICK = 1724327816272;
+let backgroundTaskService: BackgroundTaskService | undefined;
 
 const STREAM_CTX: IAuditableItemStreamBase["@context"] = [
 	SchemaOrgContexts.Context,
@@ -108,7 +109,7 @@ describe("AuditableItemStreamService — metrics", () => {
 		await setupTestEnv();
 
 		initSchema();
-		initSchemaVerifiableStorage();
+		initSchemaNotarization();
 		initSchemaImmutableProof();
 		initSchemaBackgroundTask();
 
@@ -138,6 +139,13 @@ describe("AuditableItemStreamService — metrics", () => {
 		await cleanupTestEnv();
 	});
 
+	afterEach(async () => {
+		if (backgroundTaskService) {
+			await backgroundTaskService.stop();
+			backgroundTaskService = undefined;
+		}
+	});
+
 	beforeEach(async () => {
 		const streamStorage = new MemoryEntityStorageConnector<AuditableItemStream>({
 			entitySchema: nameof<AuditableItemStream>(),
@@ -150,22 +158,20 @@ describe("AuditableItemStreamService — metrics", () => {
 		EntityStorageConnectorFactory.register("auditable-item-stream", () => streamStorage);
 		EntityStorageConnectorFactory.register("auditable-item-stream-entry", () => streamEntryStorage);
 
-		const verifiableStorage = new MemoryEntityStorageConnector<VerifiableItem>({
-			entitySchema: nameof<VerifiableItem>(),
-			partitionContextIds: [ContextIdKeys.Tenant]
-		});
-		EntityStorageConnectorFactory.register("verifiable-item", () => verifiableStorage);
-
-		VerifiableStorageConnectorFactory.register(
-			"verifiable-storage",
-			() => new EntityStorageVerifiableStorageConnector()
-		);
-
 		const immutableProofStorage = new MemoryEntityStorageConnector<ImmutableProof>({
 			entitySchema: nameof<ImmutableProof>(),
 			partitionContextIds: [ContextIdKeys.Tenant]
 		});
 		EntityStorageConnectorFactory.register("immutable-proof", () => immutableProofStorage);
+
+		const notarizationStorage = new MemoryEntityStorageConnector<Notarization>({
+			entitySchema: nameof<Notarization>()
+		});
+		EntityStorageConnectorFactory.register("notarization", () => notarizationStorage);
+		NotarizationConnectorFactory.register(
+			"notarization",
+			() => new EntityStorageNotarizationConnector()
+		);
 
 		const backgroundTaskStorage = new MemoryEntityStorageConnector<BackgroundTask>({
 			entitySchema: nameof<BackgroundTask>()
@@ -173,6 +179,7 @@ describe("AuditableItemStreamService — metrics", () => {
 		EntityStorageConnectorFactory.register("background-task", () => backgroundTaskStorage);
 
 		const backgroundTask = new BackgroundTaskService();
+		backgroundTaskService = backgroundTask;
 		ComponentFactory.register("background-task", () => backgroundTask);
 		await backgroundTask.start();
 

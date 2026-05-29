@@ -1308,12 +1308,12 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	}
 
 	/**
-	 * Remove the verifiable storage for the stream and entries.
-	 * @param streamId The id of the stream to remove the storage from.
+	 * Remove the proof for the stream and entries.
+	 * @param streamId The id of the stream to remove the proof from.
 	 * @returns Nothing.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
-	public async removeVerifiable(streamId: string): Promise<void> {
+	public async removeProof(streamId: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 
 		const urnParsed = Urn.fromValidString(streamId);
@@ -1342,7 +1342,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		} catch (error) {
 			throw new GeneralError(
 				AuditableItemStreamService.CLASS_NAME,
-				"removeVerifiableFailed",
+				"removeProofFailed",
 				undefined,
 				error
 			);
@@ -1660,7 +1660,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		removeOnlyProof: boolean
 	): Promise<void> {
 		if (Is.stringValue(streamEntity.proofId)) {
-			await this._immutableProofComponent.removeVerifiable(streamEntity.proofId);
+			await this._immutableProofComponent.removeNotarization(streamEntity.proofId);
 			delete streamEntity.proofId;
 
 			await this._streamStorage.set(streamEntity);
@@ -1692,7 +1692,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			for (const streamEntry of entriesResult.entities) {
 				entryIds.push(streamEntry.id as string);
 				if (Is.stringValue(streamEntry.proofId)) {
-					await this._immutableProofComponent.removeVerifiable(streamEntry.proofId);
+					await this._immutableProofComponent.removeNotarization(streamEntry.proofId);
 					delete streamEntry.proofId;
 
 					await MetricHelper.metricIncrement(

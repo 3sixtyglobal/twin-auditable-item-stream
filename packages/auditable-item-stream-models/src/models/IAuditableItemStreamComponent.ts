@@ -200,10 +200,10 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	}>;
 
 	/**
-	 * Remove the verifiable storage for the stream and entries.
-	 * @param streamId The id of the stream to remove the storage from.
+	 * Remove the proof for the stream and entries.
+	 * @param streamId The id of the stream to remove the proof from.
 	 * @returns Nothing.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
-	removeVerifiable(streamId: string): Promise<void>;
+	removeProof(streamId: string): Promise<void>;
 }

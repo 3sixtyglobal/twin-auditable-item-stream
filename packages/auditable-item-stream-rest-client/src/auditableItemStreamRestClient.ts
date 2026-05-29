@@ -37,7 +37,7 @@ import type {
 	IAuditableItemStreamUpdateEntryRequest,
 	IAuditableItemStreamUpdateRequest
 } from "@twin.org/auditable-item-stream-models";
-import { Coerce, Guards, Is, NotSupportedError } from "@twin.org/core";
+import { Coerce, Guards, Is } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import type { IComparator, SortDirection } from "@twin.org/entity";
 import { nameof } from "@twin.org/nameof";
@@ -48,7 +48,7 @@ import { HeaderHelper, HeaderTypes, MimeTypes } from "@twin.org/web";
  */
 export class AuditableItemStreamRestClient
 	extends BaseRestClient
-	implements IAuditableItemStreamComponent
+	implements Omit<IAuditableItemStreamComponent, "removeProof">
 {
 	/**
 	 * Runtime name for the class.
@@ -518,17 +518,5 @@ export class AuditableItemStreamRestClient
 			cursor: HeaderHelper.extractLinkHeaderRelation(response.headers?.[HeaderTypes.Link], "next")
 				?.urlQueryParams?.cursor
 		};
-	}
-
-	/**
-	 * Remove the verifiable storage for the stream and entries, not supported on client.
-	 * @param id The id of the stream to remove the storage from.
-	 * @returns Nothing.
-	 * @throws NotFoundError if the vertex is not found.
-	 */
-	public async removeVerifiable(id: string): Promise<void> {
-		throw new NotSupportedError(AuditableItemStreamRestClient.CLASS_NAME, "notSupportedOnClient", {
-			methodName: "removeVerifiable"
-		});
 	}
 }

@@ -29,13 +29,13 @@ import {
 } from "@twin.org/immutable-proof-service";
 import { ModuleHelper } from "@twin.org/modules";
 import { nameof } from "@twin.org/nameof";
-import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
 import {
-	EntityStorageVerifiableStorageConnector,
-	initSchema as initSchemaVerifiableStorage,
-	type VerifiableItem
-} from "@twin.org/verifiable-storage-connector-entity-storage";
-import { VerifiableStorageConnectorFactory } from "@twin.org/verifiable-storage-models";
+	EntityStorageNotarizationConnector,
+	initSchema as initSchemaNotarization,
+	type Notarization
+} from "@twin.org/notarization-connector-entity-storage";
+import { NotarizationConnectorFactory } from "@twin.org/notarization-models";
+import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
 import {
 	cleanupTestEnv,
 	setupTestEnv,
@@ -52,8 +52,9 @@ import { initSchema } from "../src/schema.js";
 let streamStorage: MemoryEntityStorageConnector<AuditableItemStream>;
 let streamEntryStorage: MemoryEntityStorageConnector<AuditableItemStreamEntry>;
 let immutableProofStorage: MemoryEntityStorageConnector<ImmutableProof>;
-let verifiableStorage: MemoryEntityStorageConnector<VerifiableItem>;
+let notarizationStorage: MemoryEntityStorageConnector<Notarization>;
 let backgroundTaskStorage: MemoryEntityStorageConnector<BackgroundTask>;
+let backgroundTaskService: BackgroundTaskService | undefined;
 
 const FIRST_TICK = 1724327716271;
 const SECOND_TICK = 1724327816272;
@@ -84,7 +85,7 @@ async function waitForProofGeneration(proofCount: number = 1): Promise<void> {
 	let count = 0;
 	do {
 		await new Promise(resolve => setTimeout(resolve, 200));
-	} while (verifiableStorage.getStore().length < proofCount && count++ < proofCount * 40);
+	} while (notarizationStorage.getStore().length < proofCount && count++ < proofCount * 40);
 }
 
 /**
@@ -109,12 +110,12 @@ function expectImmutableProof(immutableProof: IImmutableProof, created: string):
 }
 
 /**
- * Decode the immutable proof from the verifiable item.
- * @param item The verifiable item containing the proof.
+ * Decode the immutable proof from the notarization.
+ * @param notarization The notarization containing the proof.
  * @returns The decoded immutable proof.
  */
-function decodeImmutableProofFromVerifiableItem(item: VerifiableItem): IImmutableProof {
-	return ObjectHelper.fromBytes<IImmutableProof>(Converter.base64ToBytes(item.data));
+function decodeImmutableProofFromNotarization(notarization: Notarization): IImmutableProof {
+	return ObjectHelper.fromBytes<IImmutableProof>(Converter.base64ToBytes(notarization.data));
 }
 
 /**
@@ -145,7 +146,7 @@ describe("AuditableItemStreamService", () => {
 		await setupTestEnv();
 
 		initSchema();
-		initSchemaVerifiableStorage();
+		initSchemaNotarization();
 		initSchemaImmutableProof();
 		initSchemaBackgroundTask();
 
@@ -176,6 +177,13 @@ describe("AuditableItemStreamService", () => {
 		await cleanupTestEnv();
 	});
 
+	afterEach(async () => {
+		if (backgroundTaskService) {
+			await backgroundTaskService.stop();
+			backgroundTaskService = undefined;
+		}
+	});
+
 	beforeEach(async () => {
 		streamStorage = new MemoryEntityStorageConnector<AuditableItemStream>({
 			entitySchema: nameof<AuditableItemStream>(),
@@ -190,15 +198,14 @@ describe("AuditableItemStreamService", () => {
 		EntityStorageConnectorFactory.register("auditable-item-stream", () => streamStorage);
 		EntityStorageConnectorFactory.register("auditable-item-stream-entry", () => streamEntryStorage);
 
-		verifiableStorage = new MemoryEntityStorageConnector<VerifiableItem>({
-			entitySchema: nameof<VerifiableItem>(),
-			partitionContextIds: [ContextIdKeys.Tenant]
+		notarizationStorage = new MemoryEntityStorageConnector<Notarization>({
+			entitySchema: nameof<Notarization>()
 		});
-		EntityStorageConnectorFactory.register("verifiable-item", () => verifiableStorage);
+		EntityStorageConnectorFactory.register("notarization", () => notarizationStorage);
 
-		VerifiableStorageConnectorFactory.register(
-			"verifiable-storage",
-			() => new EntityStorageVerifiableStorageConnector()
+		NotarizationConnectorFactory.register(
+			"notarization",
+			() => new EntityStorageNotarizationConnector()
 		);
 
 		immutableProofStorage = new MemoryEntityStorageConnector<ImmutableProof>({
@@ -213,9 +220,10 @@ describe("AuditableItemStreamService", () => {
 		});
 		EntityStorageConnectorFactory.register("background-task", () => backgroundTaskStorage);
 
-		const backgroundTask = new BackgroundTaskService();
-		ComponentFactory.register("background-task", () => backgroundTask);
-		await backgroundTask.start();
+		const currentBackgroundTaskService = new BackgroundTaskService();
+		backgroundTaskService = currentBackgroundTaskService;
+		ComponentFactory.register("background-task", () => currentBackgroundTaskService);
+		await currentBackgroundTaskService.start();
 
 		const immutableProofService = new ImmutableProofService();
 		ComponentFactory.register("immutable-proof", () => immutableProofService);
@@ -271,17 +279,17 @@ describe("AuditableItemStreamService", () => {
 
 		await waitForProofGeneration();
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(1);
-		expect(verifiableStore[0]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0505050505050505050505050505050505050505050505050505050505050505",
-			maxAllowListSize: 100
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(1);
+		expect(notarizationStore[0]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
-		expect(typeof verifiableStore[0].data).toBe("string");
+		expect(typeof notarizationStore[0].data).toBe("string");
 
-		const immutableProof = decodeImmutableProofFromVerifiableItem(verifiableStore[0]);
+		const immutableProof = decodeImmutableProofFromNotarization(notarizationStore[0]);
 		expectImmutableProof(immutableProof, "2024-08-22T11:56:56.272Z");
 	});
 
@@ -374,25 +382,25 @@ describe("AuditableItemStreamService", () => {
 
 		await waitForProofGeneration(2);
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(2);
-		expect(verifiableStore[0]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0909090909090909090909090909090909090909090909090909090909090909",
-			maxAllowListSize: 100
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(2);
+		expect(notarizationStore[0]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
-		expect(verifiableStore[1]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
-			maxAllowListSize: 100
+		expect(notarizationStore[1]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
 
-		const immutableProof = decodeImmutableProofFromVerifiableItem(verifiableStore[0]);
+		const immutableProof = decodeImmutableProofFromNotarization(notarizationStore[0]);
 		expectImmutableProof(immutableProof, "2024-08-22T11:56:56.272Z");
 
-		const immutableProofEntry = decodeImmutableProofFromVerifiableItem(verifiableStore[1]);
+		const immutableProofEntry = decodeImmutableProofFromNotarization(notarizationStore[1]);
 		expectImmutableProof(immutableProofEntry, "2024-08-22T11:56:56.272Z");
 	});
 
@@ -480,8 +488,8 @@ describe("AuditableItemStreamService", () => {
 		});
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toEqual([]);
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toEqual([]);
 	});
 
 	test("Can get a stream with a single object and multiple entries", async () => {
@@ -599,25 +607,25 @@ describe("AuditableItemStreamService", () => {
 			]
 		});
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(2);
-		expect(verifiableStore[0]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0909090909090909090909090909090909090909090909090909090909090909",
-			maxAllowListSize: 100
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(2);
+		expect(notarizationStore[0]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
-		expect(verifiableStore[1]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
-			maxAllowListSize: 100
+		expect(notarizationStore[1]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
 
-		const immutableProof = decodeImmutableProofFromVerifiableItem(verifiableStore[0]);
+		const immutableProof = decodeImmutableProofFromNotarization(notarizationStore[0]);
 		expectImmutableProof(immutableProof, "2024-08-22T11:56:56.272Z");
 
-		const immutableProofEntry = decodeImmutableProofFromVerifiableItem(verifiableStore[1]);
+		const immutableProofEntry = decodeImmutableProofFromNotarization(notarizationStore[1]);
 		expectImmutableProof(immutableProofEntry, "2024-08-22T11:56:56.272Z");
 	});
 
@@ -945,26 +953,26 @@ describe("AuditableItemStreamService", () => {
 		});
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(2);
-		expect(verifiableStore[0]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0909090909090909090909090909090909090909090909090909090909090909",
-			maxAllowListSize: 100
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(2);
+		expect(notarizationStore[0]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
-		expect(verifiableStore[1]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
-			maxAllowListSize: 100
+		expect(notarizationStore[1]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
 		expectImmutableProof(
-			decodeImmutableProofFromVerifiableItem(verifiableStore[0]),
+			decodeImmutableProofFromNotarization(notarizationStore[0]),
 			"2024-08-22T11:56:56.272Z"
 		);
 		expectImmutableProof(
-			decodeImmutableProofFromVerifiableItem(verifiableStore[1]),
+			decodeImmutableProofFromNotarization(notarizationStore[1]),
 			"2024-08-22T11:56:56.272Z"
 		);
 	});
@@ -1079,26 +1087,26 @@ describe("AuditableItemStreamService", () => {
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 		expect(entryStore[1].id).not.toEqual(entryStore[2].id);
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(2);
-		expect(verifiableStore[0]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
-			maxAllowListSize: 100
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(2);
+		expect(notarizationStore[0]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
-		expect(verifiableStore[1]).toMatchObject({
-			allowList: [TEST_ORGANIZATION_IDENTITY],
-			creator: TEST_ORGANIZATION_IDENTITY,
-			id: "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
-			maxAllowListSize: 100
+		expect(notarizationStore[1]).toMatchObject({
+			mode: "locked",
+			transferLockUntilDestroyed: true,
+			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
+			owner: TEST_ORGANIZATION_IDENTITY
 		});
 		expectImmutableProof(
-			decodeImmutableProofFromVerifiableItem(verifiableStore[0]),
+			decodeImmutableProofFromNotarization(notarizationStore[0]),
 			"2024-08-22T11:56:56.272Z"
 		);
 		expectImmutableProof(
-			decodeImmutableProofFromVerifiableItem(verifiableStore[1]),
+			decodeImmutableProofFromNotarization(notarizationStore[1]),
 			"2024-08-22T11:56:56.272Z"
 		);
 	});
@@ -1470,8 +1478,8 @@ describe("AuditableItemStreamService", () => {
 		const entryStore = streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(12);
 
-		const verifiableStore = verifiableStorage.getStore();
-		expect(verifiableStore).toHaveLength(3);
+		const notarizationStore = notarizationStorage.getStore();
+		expect(notarizationStore).toHaveLength(3);
 	});
 
 	test("Can get an entry from the stream", async () => {
@@ -1777,7 +1785,7 @@ describe("AuditableItemStreamService", () => {
 			immutableInterval: 1
 		});
 
-		await service.removeVerifiable(streamId);
+		await service.removeProof(streamId);
 
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
