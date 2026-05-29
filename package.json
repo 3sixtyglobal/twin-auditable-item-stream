@@ -4,7 +4,7 @@
 	"description": "Monorepo for auditable item stream models, service, and REST client packages.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/auditable-item-stream.git"
+		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream.git"
 	},
 	"author": "martyn.janes@iota.org",
 	"license": "Apache-2.0",
@@ -60,7 +60,7 @@
 	],
 	"type": "module",
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/auditable-item-stream/issues"
+		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream/issues"
 	},
 	"homepage": "https://twindev.org"
 }
