@@ -618,11 +618,11 @@ NotFoundError if the stream is not found.
 
 ***
 
-### removeVerifiable() {#removeverifiable}
+### removeProof() {#removeproof}
 
-> **removeVerifiable**(`streamId`): `Promise`\<`void`\>
+> **removeProof**(`streamId`): `Promise`\<`void`\>
 
-Remove the verifiable storage for the stream and entries.
+Remove the proof for the stream and entries.
 
 #### Parameters
 
@@ -630,7 +630,7 @@ Remove the verifiable storage for the stream and entries.
 
 `string`
 
-The id of the stream to remove the storage from.
+The id of the stream to remove the proof from.
 
 #### Returns
 
@@ -644,4 +644,4 @@ NotFoundError if the vertex is not found.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.removeVerifiable`
+`IAuditableItemStreamComponent.removeProof`

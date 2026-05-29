@@ -8,7 +8,7 @@ Client for performing auditable item stream through to REST endpoints.
 
 ## Implements
 
-- `IAuditableItemStreamComponent`
+- `Omit`\<`IAuditableItemStreamComponent`, `"removeProof"`\>
 
 ## Constructors
 
@@ -58,7 +58,7 @@ The class name of the component.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.className`
+`Omit.className`
 
 ***
 
@@ -84,7 +84,7 @@ The id of the new stream item.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.create`
+`Omit.create`
 
 ***
 
@@ -154,7 +154,7 @@ NotFoundError if the stream is not found
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.get`
+`Omit.get`
 
 ***
 
@@ -180,7 +180,7 @@ Nothing.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.update`
+`Omit.update`
 
 ***
 
@@ -206,7 +206,7 @@ Nothing.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.close`
+`Omit.close`
 
 ***
 
@@ -232,7 +232,7 @@ Nothing.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.remove`
+`Omit.remove`
 
 ***
 
@@ -288,7 +288,7 @@ The entities, which can be partial if a limited keys list was provided.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.query`
+`Omit.query`
 
 ***
 
@@ -320,7 +320,7 @@ The id of the created entry, if not provided.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.createEntry`
+`Omit.createEntry`
 
 ***
 
@@ -366,7 +366,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.getEntry`
+`Omit.getEntry`
 
 ***
 
@@ -402,7 +402,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.getEntryObject`
+`Omit.getEntryObject`
 
 ***
 
@@ -440,7 +440,7 @@ Nothing.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.updateEntry`
+`Omit.updateEntry`
 
 ***
 
@@ -472,7 +472,7 @@ Nothing.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.removeEntry`
+`Omit.removeEntry`
 
 ***
 
@@ -542,7 +542,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.getEntries`
+`Omit.getEntries`
 
 ***
 
@@ -606,34 +606,4 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`IAuditableItemStreamComponent.getEntryObjects`
-
-***
-
-### removeVerifiable() {#removeverifiable}
-
-> **removeVerifiable**(`id`): `Promise`\<`void`\>
-
-Remove the verifiable storage for the stream and entries, not supported on client.
-
-#### Parameters
-
-##### id
-
-`string`
-
-The id of the stream to remove the storage from.
-
-#### Returns
-
-`Promise`\<`void`\>
-
-Nothing.
-
-#### Throws
-
-NotFoundError if the vertex is not found.
-
-#### Implementation of
-
-`IAuditableItemStreamComponent.removeVerifiable`
+`Omit.getEntryObjects`
