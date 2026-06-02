@@ -16,7 +16,14 @@ import {
 	ContextIdStore,
 	type IContextIds
 } from "@twin.org/context";
-import { BaseError, ComponentFactory, Converter, ObjectHelper, RandomHelper } from "@twin.org/core";
+import {
+	BaseError,
+	ComponentFactory,
+	Converter,
+	ObjectHelper,
+	RandomHelper,
+	SharedStore
+} from "@twin.org/core";
 import { ComparisonOperator, SortDirection } from "@twin.org/entity";
 import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
 import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
@@ -2493,6 +2500,125 @@ describe("AuditableItemStreamService", () => {
 				])
 			);
 			return true;
+		});
+	});
+
+	// ------------------------------------------------------------------ //
+	// Concurrent mutating operations must not overwrite each other.      //
+	// ------------------------------------------------------------------ //
+	describe("concurrent operations on the same stream", () => {
+		const PARALLEL_OPS = 10;
+
+		beforeEach(() => {
+			// Clear the Mutex registry so getOrFetchLock always processes a
+			// fresh key — same pattern as the AIG / framework regression tests.
+			SharedStore.set("mutexLocks", {});
+		});
+
+		test("parallel createEntry calls all persist — numberOfItems equals PARALLEL_OPS", async () => {
+			const service = new AuditableItemStreamService();
+
+			const streamId = await service.create({
+				"@context": [
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
+				],
+				type: AuditableItemStreamTypes.Stream,
+				immutableInterval: 0
+			});
+
+			await Promise.all(
+				Array.from({ length: PARALLEL_OPS }, async (unused, i) =>
+					service.createEntry(streamId, {
+						"@context": "https://www.w3.org/ns/activitystreams",
+						"@type": "Note",
+						content: `Concurrent entry ${i}`
+					})
+				)
+			);
+
+			const result = await service.get(streamId);
+			expect(result.stream.numberOfItems).toEqual(PARALLEL_OPS);
+		});
+
+		test("parallel createEntry calls all return distinct entry IDs", async () => {
+			const service = new AuditableItemStreamService();
+
+			const streamId = await service.create({
+				"@context": [
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
+				],
+				type: AuditableItemStreamTypes.Stream,
+				immutableInterval: 0
+			});
+
+			const entryIds = await Promise.all(
+				Array.from({ length: PARALLEL_OPS }, async (unused, i) =>
+					service.createEntry(streamId, {
+						"@context": "https://www.w3.org/ns/activitystreams",
+						"@type": "Note",
+						content: `Distinct entry ${i}`
+					})
+				)
+			);
+
+			const uniqueIds = new Set(entryIds);
+			expect(uniqueIds.size).toEqual(PARALLEL_OPS);
+		});
+
+		test("overlapping close() and createEntry() calls leave numberOfItems consistent", async () => {
+			const service = new AuditableItemStreamService();
+
+			const streamId = await service.create({
+				"@context": [
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
+				],
+				type: AuditableItemStreamTypes.Stream,
+				immutableInterval: 0,
+				entries: {
+					type: "ItemList",
+					itemListElement: [
+						{
+							type: AuditableItemStreamTypes.StreamEntry,
+							entryObject: {
+								"@context": "https://www.w3.org/ns/activitystreams",
+								"@type": "Note",
+								content: "Seed entry 1"
+							}
+						},
+						{
+							type: AuditableItemStreamTypes.StreamEntry,
+							entryObject: {
+								"@context": "https://www.w3.org/ns/activitystreams",
+								"@type": "Note",
+								content: "Seed entry 2"
+							}
+						}
+					]
+				}
+			});
+
+			const results = await Promise.allSettled([
+				service.close(streamId),
+				...Array.from({ length: PARALLEL_OPS }, async (unused, i) =>
+					service.createEntry(streamId, {
+						"@context": "https://www.w3.org/ns/activitystreams",
+						"@type": "Note",
+						content: `Race entry ${i}`
+					})
+				)
+			]);
+
+			const succeeded = results.filter(r => r.status === "fulfilled").length;
+			const stream = await service.get(streamId);
+
+			// numberOfItems must match the number of operations that actually succeeded
+			expect(stream.stream.numberOfItems).toEqual(succeeded - 1 + 2);
 		});
 	});
 
