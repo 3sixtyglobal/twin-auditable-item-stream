@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.3-next.19](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.18...auditable-item-stream-service-v0.0.3-next.19) (2026-06-02)
+
+
+### Features
+
+* additional mutex locks ([07f271f](https://github.com/iotaledger/twin-auditable-item-stream/commit/07f271f411b2835ea9aa5d31ed6557e7aa659939))
+
+
+### Bug Fixes
+
+* guard stream mutations with per-stream Mutex ([#75](https://github.com/iotaledger/twin-auditable-item-stream/issues/75)) ([83aaf55](https://github.com/iotaledger/twin-auditable-item-stream/commit/83aaf550264dd2ffcbea8c6b1e5641d943cc7108))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.18 to 0.0.3-next.19
+
 ## [0.0.3-next.18](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.17...auditable-item-stream-service-v0.0.3-next.18) (2026-05-29)
 
 
