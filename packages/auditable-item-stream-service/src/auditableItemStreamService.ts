@@ -559,8 +559,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			});
 		}
 
+		const streamId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamId, { throwOnTimeout: true });
+
 		try {
-			const streamId = urnParsed.namespaceSpecific(0);
 			const streamEntity = await this._streamStorage.get(streamId);
 
 			if (Is.empty(streamEntity)) {
@@ -587,6 +589,8 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				undefined,
 				error
 			);
+		} finally {
+			Mutex.unlock(streamId);
 		}
 	}
 
@@ -1340,9 +1344,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			});
 		}
 
-		try {
-			const streamIdParts = urnParsed.namespaceSpecific(0);
+		const streamIdParts = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamIdParts, { throwOnTimeout: true });
 
+		try {
 			const streamEntity = await this._streamStorage.get(streamIdParts);
 
 			if (Is.empty(streamEntity)) {
@@ -1361,6 +1366,8 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				undefined,
 				error
 			);
+		} finally {
+			Mutex.unlock(streamIdParts);
 		}
 	}
 
