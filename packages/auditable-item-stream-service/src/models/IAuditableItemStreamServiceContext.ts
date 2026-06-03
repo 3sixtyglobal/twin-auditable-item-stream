@@ -25,4 +25,9 @@ export interface IAuditableItemStreamServiceContext {
 	 * The immutable check interval.
 	 */
 	immutableInterval: number;
+
+	/**
+	 * The identity of the organization which controls the stream.
+	 */
+	organizationIdentity?: string;
 }

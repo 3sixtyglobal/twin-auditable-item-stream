@@ -252,7 +252,8 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				now: new Date(Date.now()).toISOString(),
 				contextIds,
 				indexCounter: 0,
-				immutableInterval: stream?.immutableInterval ?? this._defaultImmutableInterval
+				immutableInterval: stream?.immutableInterval ?? this._defaultImmutableInterval,
+				organizationIdentity: contextIds?.[ContextIdKeys.Organization]
 			};
 
 			const streamEntity: AuditableItemStream = {
@@ -266,20 +267,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				numberOfItems: 0
 			};
 
-			// Create the JSON-LD object we want to use for the proof
-			// this is a subset of fixed properties from the stream object.
-			const streamModel = this.streamEntityToJsonLd(
-				ObjectHelper.pick(streamEntity, AuditableItemStreamService._PROOF_KEYS_STREAM)
-			);
-
-			// Create the proof for the stream object
-			if (context.immutableInterval > 0) {
-				streamEntity.proofId = await this._immutableProofComponent.create(streamModel);
-				await MetricHelper.metricIncrement(
-					this._telemetryComponent,
-					AuditableItemStreamMetricIds.ProofsCreatedStream
-				);
-			}
+			const streamUrn = await this.createStreamProof(streamEntity, context.immutableInterval);
 
 			if (Is.arrayValue(stream.entries?.[SchemaOrgTypes.ItemListElement])) {
 				for (const entry of stream.entries[SchemaOrgTypes.ItemListElement]) {
@@ -305,10 +293,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamCreated>(
 				AuditableItemStreamTopics.StreamCreated,
-				{ id: streamModel.id }
+				{ id: streamUrn }
 			);
 
-			return streamModel.id;
+			return streamUrn;
 		} catch (error) {
 			throw new GeneralError(
 				AuditableItemStreamService.CLASS_NAME,
@@ -425,8 +413,37 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				);
 			}
 
+			let changed = false;
+
 			if (!ObjectHelper.equal(streamEntity.annotationObject, stream.annotationObject, false)) {
 				streamEntity.annotationObject = stream.annotationObject;
+				changed = true;
+			}
+
+			const contextIds = await ContextIdStore.getContextIds();
+
+			if (
+				!Is.stringValue(streamEntity.organizationIdentity) &&
+				Is.stringValue(contextIds?.[ContextIdKeys.Organization])
+			) {
+				streamEntity.organizationIdentity = contextIds?.[ContextIdKeys.Organization];
+				changed = true;
+			}
+
+			if (
+				!Is.stringValue(streamEntity.proofId) &&
+				Is.stringValue(streamEntity.organizationIdentity)
+			) {
+				await this.createStreamProof(
+					streamEntity,
+					streamEntity.immutableInterval ?? this._defaultImmutableInterval
+				);
+				if (Is.stringValue(streamEntity.proofId)) {
+					changed = true;
+				}
+			}
+
+			if (changed) {
 				streamEntity.dateModified = new Date(Date.now()).toISOString();
 
 				await this._streamStorage.set(streamEntity);
@@ -711,6 +728,16 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				);
 			}
 
+			// If the stream does not have an organization identity yet, set it from the context.
+			// This is needed for the proof creation and immutability of the stream and entries.
+			if (
+				!Is.stringValue(streamEntity.organizationIdentity) &&
+				Is.stringValue(contextIds?.[ContextIdKeys.Organization])
+			) {
+				streamEntity.organizationIdentity = contextIds?.[ContextIdKeys.Organization];
+				await this._streamStorage.set(streamEntity);
+			}
+
 			if (streamEntity.closed) {
 				await MetricHelper.metricIncrement(
 					this._telemetryComponent,
@@ -726,7 +753,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				now: new Date(Date.now()).toISOString(),
 				contextIds,
 				indexCounter: streamEntity.numberOfItems,
-				immutableInterval: streamEntity.immutableInterval
+				immutableInterval: streamEntity.immutableInterval,
+				organizationIdentity:
+					streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
 			};
 
 			const createdId = await this.setEntry(context, streamEntity.id, {
@@ -997,7 +1026,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				now: new Date(Date.now()).toISOString(),
 				contextIds,
 				indexCounter: streamEntity.numberOfItems,
-				immutableInterval: streamEntity.immutableInterval
+				immutableInterval: streamEntity.immutableInterval,
+				organizationIdentity:
+					streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
 			};
 
 			await this.setEntry(context, streamEntity.id, {
@@ -1104,7 +1135,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 					now: new Date(Date.now()).toISOString(),
 					contextIds,
 					indexCounter: streamEntity.numberOfItems,
-					immutableInterval: streamEntity.immutableInterval
+					immutableInterval: streamEntity.immutableInterval,
+					organizationIdentity:
+						streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
 				};
 
 				await this.setEntry(context, streamEntity.id, {
@@ -1372,6 +1405,31 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	}
 
 	/**
+	 * Create an immutable proof for the stream entity if the conditions are met.
+	 * @param streamEntity The stream entity to create the proof for.
+	 * @param immutableInterval The immutable interval for the stream.
+	 * @internal
+	 */
+	private async createStreamProof(
+		streamEntity: AuditableItemStream,
+		immutableInterval: number
+	): Promise<string> {
+		const streamModel = this.streamEntityToJsonLd(
+			ObjectHelper.pick(streamEntity, AuditableItemStreamService._PROOF_KEYS_STREAM)
+		);
+
+		if (immutableInterval > 0 && Is.stringValue(streamModel.organizationIdentity)) {
+			streamEntity.proofId = await this._immutableProofComponent.create(streamModel);
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.ProofsCreatedStream
+			);
+		}
+
+		return streamModel.id;
+	}
+
+	/**
 	 * Map the stream entity to a JSON-LD model.
 	 * @param streamEntity The stream entity.
 	 * @returns The model.
@@ -1480,15 +1538,18 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				ObjectHelper.pick(entity, AuditableItemStreamService._PROOF_KEYS_STREAM_ENTRY)
 			);
 
-			// Create the proof for the stream object
-			entity.proofId = await this._immutableProofComponent.create(
-				JsonLdHelper.toNodeObject(streamEntryModel)
-			);
-			await MetricHelper.metricIncrement(
-				this._telemetryComponent,
-				AuditableItemStreamMetricIds.ProofsCreatedEntry,
-				{ index: entity.index }
-			);
+			// Create the proof for the stream object but only if we have an organization identity,
+			// either from the stream or the context, as this is needed for the proof creation and immutability.
+			if (Is.stringValue(context.organizationIdentity)) {
+				entity.proofId = await this._immutableProofComponent.create(
+					JsonLdHelper.toNodeObject(streamEntryModel)
+				);
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ProofsCreatedEntry,
+					{ index: entity.index }
+				);
+			}
 		}
 
 		await this._streamEntryStorage.set(entity);
