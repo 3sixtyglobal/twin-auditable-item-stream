@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.0.3-next.20](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.19...auditable-item-stream-service-v0.0.3-next.20) (2026-06-03)
+
+
+### Bug Fixes
+
+* proof only created if organization id is available ([#77](https://github.com/iotaledger/twin-auditable-item-stream/issues/77)) ([335d95b](https://github.com/iotaledger/twin-auditable-item-stream/commit/335d95b0cfa9156fa6830355787dff7bc8444cea))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.19 to 0.0.3-next.20
+
 ## [0.0.3-next.19](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.18...auditable-item-stream-service-v0.0.3-next.19) (2026-06-02)
 
 
