@@ -1408,6 +1408,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Create an immutable proof for the stream entity if the conditions are met.
 	 * @param streamEntity The stream entity to create the proof for.
 	 * @param immutableInterval The immutable interval for the stream.
+	 * @returns The proof id.
 	 * @internal
 	 */
 	private async createStreamProof(
@@ -1562,6 +1563,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param streamId The stream id.
 	 * @param entryId The entry id.
 	 * @param verifyEntry Should the entry be verified.
+	 * @returns The entry entity and optional verification result, or undefined if not found.
 	 * @internal
 	 */
 	private async findEntry(
@@ -1629,7 +1631,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param propertiesToReturn The properties to return.
 	 * @param limit Limit the number of entities when finding.
 	 * @param cursor The cursor.
-	 * @param contextIds The context ids to perform the operation with.
+	 * @returns The stream entries and optional next cursor.
 	 * @internal
 	 */
 	private async findEntries(
