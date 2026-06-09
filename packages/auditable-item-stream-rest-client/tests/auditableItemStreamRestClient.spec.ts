@@ -2,13 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	AuditableItemStreamContexts,
-	AuditableItemStreamTypes
+	AuditableItemStreamTypes,
+	type IAuditableItemStreamComponent
 } from "@twin.org/auditable-item-stream-models";
 import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
 import { HeaderTypes } from "@twin.org/web";
 import { AuditableItemStreamRestClient } from "../src/auditableItemStreamRestClient.js";
 
+const fetchMock = vi.fn<typeof globalThis.fetch>();
+
 describe("AuditableItemStreamRestClient", () => {
+	let originalFetch: typeof globalThis.fetch;
+
+	beforeEach(() => {
+		originalFetch = globalThis.fetch;
+		globalThis.fetch = fetchMock;
+	});
+
+	afterEach(() => {
+		fetchMock.mockReset();
+		globalThis.fetch = originalFetch;
+	});
+
 	test("Can create an instance", async () => {
 		const client = new AuditableItemStreamRestClient({ endpoint: "http://localhost:8080" });
 		expect(client).toBeDefined();
@@ -66,6 +81,7 @@ describe("AuditableItemStreamRestClient", () => {
 		await client.getEntries();
 		await client.getEntryObjects("ais:stream-id");
 		await client.getEntryObjects();
+		await client.removeProof("ais:stream-id");
 
 		expect(fetchSpy).toHaveBeenNthCalledWith(1, "/", "POST", expect.any(Object));
 		expect(fetchSpy).toHaveBeenNthCalledWith(2, "/:id", "GET", expect.any(Object));
@@ -97,5 +113,23 @@ describe("AuditableItemStreamRestClient", () => {
 		expect(fetchSpy).toHaveBeenNthCalledWith(13, "/entries", "GET", expect.any(Object));
 		expect(fetchSpy).toHaveBeenNthCalledWith(14, "/:id/entries/objects", "GET", expect.any(Object));
 		expect(fetchSpy).toHaveBeenNthCalledWith(15, "/entries/objects", "GET", expect.any(Object));
+		expect(fetchSpy).toHaveBeenNthCalledWith(16, "/:id/proof", "DELETE", expect.any(Object));
+	});
+
+	test("Satisfies full IAuditableItemStreamComponent contract — removeProof exists", () => {
+		const client = new AuditableItemStreamRestClient({ endpoint: "http://localhost:8080" });
+		expect(typeof (client as unknown as IAuditableItemStreamComponent).removeProof).toBe(
+			"function"
+		);
+	});
+
+	test("removeProof sends DELETE /:id/proof to the server", async () => {
+		fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+		const client = new AuditableItemStreamRestClient({ endpoint: "http://localhost:8080" });
+		await (client as unknown as IAuditableItemStreamComponent).removeProof("ais:stream-id");
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		const [url, options] = fetchMock.mock.calls[0];
+		expect(url).toBe("http://localhost:8080/auditable-item-stream/ais:stream-id/proof");
+		expect(options?.method).toBe("DELETE");
 	});
 });

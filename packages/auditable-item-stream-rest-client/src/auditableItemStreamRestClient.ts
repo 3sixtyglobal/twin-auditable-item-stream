@@ -34,6 +34,7 @@ import type {
 	IAuditableItemStreamListEntryObjectsResponse,
 	IAuditableItemStreamListRequest,
 	IAuditableItemStreamListResponse,
+	IAuditableItemStreamRemoveProofRequest,
 	IAuditableItemStreamUpdateEntryRequest,
 	IAuditableItemStreamUpdateRequest
 } from "@twin.org/auditable-item-stream-models";
@@ -48,7 +49,7 @@ import { HeaderHelper, HeaderTypes, MimeTypes } from "@twin.org/web";
  */
 export class AuditableItemStreamRestClient
 	extends BaseRestClient
-	implements Omit<IAuditableItemStreamComponent, "removeProof">
+	implements IAuditableItemStreamComponent
 {
 	/**
 	 * Runtime name for the class.
@@ -178,6 +179,23 @@ export class AuditableItemStreamRestClient
 				id
 			}
 		});
+	}
+
+	/**
+	 * Remove the notarization proof from a stream.
+	 * @param streamId The id of the stream.
+	 * @returns Nothing.
+	 */
+	public async removeProof(streamId: string): Promise<void> {
+		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(streamId), streamId);
+
+		await this.fetch<IAuditableItemStreamRemoveProofRequest, INoContentResponse>(
+			"/:id/proof",
+			"DELETE",
+			{
+				pathParams: { id: streamId }
+			}
+		);
 	}
 
 	/**

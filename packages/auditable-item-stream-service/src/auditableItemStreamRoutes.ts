@@ -33,6 +33,7 @@ import {
 	type IAuditableItemStreamListEntryObjectsResponse,
 	type IAuditableItemStreamListRequest,
 	type IAuditableItemStreamListResponse,
+	type IAuditableItemStreamRemoveProofRequest,
 	type IAuditableItemStreamUpdateEntryRequest,
 	type IAuditableItemStreamUpdateRequest
 } from "@twin.org/auditable-item-stream-models";
@@ -1064,6 +1065,37 @@ export function generateRestRoutesAuditableItemStream(
 		]
 	};
 
+	const removeProofRoute: IRestRoute<IAuditableItemStreamRemoveProofRequest, INoContentResponse> = {
+		operationId: "auditableItemStreamRemoveProof",
+		summary: "Remove the proof from a stream",
+		tag: tagsAuditableItemStream[0].name,
+		method: "DELETE",
+		path: `${baseRouteName}/:id/proof`,
+		handler: async (httpRequestContext, request) =>
+			auditableItemStreamRemoveProof(httpRequestContext, componentName, request),
+		requestType: {
+			type: nameof<IAuditableItemStreamRemoveProofRequest>(),
+			examples: [
+				{
+					id: "auditableItemStreamRemoveProofRequestExample",
+					request: {
+						pathParams: {
+							id: "ais:1234567890"
+						}
+					}
+				}
+			]
+		},
+		responseType: [
+			{
+				type: nameof<INoContentResponse>()
+			},
+			{
+				type: nameof<INotFoundResponse>()
+			}
+		]
+	};
+
 	return [
 		createRoute,
 		getRoute,
@@ -1079,7 +1111,8 @@ export function generateRestRoutesAuditableItemStream(
 		listEntriesRoute,
 		listEntriesNoStreamRoute,
 		listEntryObjectsRoute,
-		listEntryObjectsNoStreamRoute
+		listEntryObjectsNoStreamRoute,
+		removeProofRoute
 	];
 }
 
@@ -1697,5 +1730,33 @@ export async function auditableItemStreamListEntryObjectsNoStream(
 	return {
 		headers,
 		body: result.entries
+	};
+}
+
+/**
+ * Remove the proof from a stream.
+ * @param httpRequestContext The request context for the API.
+ * @param componentName The name of the component to use in the routes.
+ * @param request The request.
+ * @returns The response object with additional http response properties.
+ */
+export async function auditableItemStreamRemoveProof(
+	httpRequestContext: IHttpRequestContext,
+	componentName: string,
+	request: IAuditableItemStreamRemoveProofRequest
+): Promise<INoContentResponse> {
+	Guards.object<IAuditableItemStreamRemoveProofRequest>(ROUTES_SOURCE, nameof(request), request);
+	Guards.object<IAuditableItemStreamRemoveProofRequest["pathParams"]>(
+		ROUTES_SOURCE,
+		nameof(request.pathParams),
+		request.pathParams
+	);
+	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.id), request.pathParams.id);
+
+	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
+	await component.removeProof(request.pathParams.id);
+
+	return {
+		statusCode: HttpStatusCode.noContent
 	};
 }

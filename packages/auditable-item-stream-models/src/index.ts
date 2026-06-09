@@ -20,6 +20,7 @@ export * from "./models/api/IAuditableItemStreamListEntryObjectsRequest.js";
 export * from "./models/api/IAuditableItemStreamListEntryObjectsResponse.js";
 export * from "./models/api/IAuditableItemStreamListRequest.js";
 export * from "./models/api/IAuditableItemStreamListResponse.js";
+export * from "./models/api/IAuditableItemStreamRemoveProofRequest.js";
 export * from "./models/api/IAuditableItemStreamUpdateEntryRequest.js";
 export * from "./models/api/IAuditableItemStreamUpdateRequest.js";
 export * from "./models/auditableItemStreamContexts.js";
