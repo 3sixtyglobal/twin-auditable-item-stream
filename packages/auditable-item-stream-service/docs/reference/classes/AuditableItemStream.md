@@ -38,9 +38,9 @@ The date/time of when the stream was modified.
 
 ***
 
-### organizationIdentity? {#organizationidentity}
+### organizationIdentity {#organizationidentity}
 
-> `optional` **organizationIdentity?**: `string`
+> **organizationIdentity**: `string`
 
 The identity of the organization which controls the stream.
 

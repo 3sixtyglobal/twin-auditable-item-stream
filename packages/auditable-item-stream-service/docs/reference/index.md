@@ -34,4 +34,5 @@
 - [auditableItemStreamListEntriesNoStream](functions/auditableItemStreamListEntriesNoStream.md)
 - [auditableItemStreamListEntryObjects](functions/auditableItemStreamListEntryObjects.md)
 - [auditableItemStreamListEntryObjectsNoStream](functions/auditableItemStreamListEntryObjectsNoStream.md)
+- [auditableItemStreamRemoveProof](functions/auditableItemStreamRemoveProof.md)
 - [initSchema](functions/initSchema.md)

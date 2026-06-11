@@ -8,7 +8,7 @@ Client for performing auditable item stream through to REST endpoints.
 
 ## Implements
 
-- `Omit`\<`IAuditableItemStreamComponent`, `"removeProof"`\>
+- `IAuditableItemStreamComponent`
 
 ## Constructors
 
@@ -58,7 +58,7 @@ The class name of the component.
 
 #### Implementation of
 
-`Omit.className`
+`IAuditableItemStreamComponent.className`
 
 ***
 
@@ -84,7 +84,7 @@ The id of the new stream item.
 
 #### Implementation of
 
-`Omit.create`
+`IAuditableItemStreamComponent.create`
 
 ***
 
@@ -154,7 +154,7 @@ NotFoundError if the stream is not found
 
 #### Implementation of
 
-`Omit.get`
+`IAuditableItemStreamComponent.get`
 
 ***
 
@@ -180,7 +180,7 @@ Nothing.
 
 #### Implementation of
 
-`Omit.update`
+`IAuditableItemStreamComponent.update`
 
 ***
 
@@ -206,7 +206,33 @@ Nothing.
 
 #### Implementation of
 
-`Omit.close`
+`IAuditableItemStreamComponent.close`
+
+***
+
+### removeProof() {#removeproof}
+
+> **removeProof**(`streamId`): `Promise`\<`void`\>
+
+Remove the notarization proof from a stream.
+
+#### Parameters
+
+##### streamId
+
+`string`
+
+The id of the stream.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+Nothing.
+
+#### Implementation of
+
+`IAuditableItemStreamComponent.removeProof`
 
 ***
 
@@ -232,7 +258,7 @@ Nothing.
 
 #### Implementation of
 
-`Omit.remove`
+`IAuditableItemStreamComponent.remove`
 
 ***
 
@@ -288,7 +314,7 @@ The entities, which can be partial if a limited keys list was provided.
 
 #### Implementation of
 
-`Omit.query`
+`IAuditableItemStreamComponent.query`
 
 ***
 
@@ -320,7 +346,7 @@ The id of the created entry, if not provided.
 
 #### Implementation of
 
-`Omit.createEntry`
+`IAuditableItemStreamComponent.createEntry`
 
 ***
 
@@ -366,7 +392,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`Omit.getEntry`
+`IAuditableItemStreamComponent.getEntry`
 
 ***
 
@@ -402,7 +428,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`Omit.getEntryObject`
+`IAuditableItemStreamComponent.getEntryObject`
 
 ***
 
@@ -440,7 +466,7 @@ Nothing.
 
 #### Implementation of
 
-`Omit.updateEntry`
+`IAuditableItemStreamComponent.updateEntry`
 
 ***
 
@@ -472,7 +498,7 @@ Nothing.
 
 #### Implementation of
 
-`Omit.removeEntry`
+`IAuditableItemStreamComponent.removeEntry`
 
 ***
 
@@ -542,7 +568,7 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`Omit.getEntries`
+`IAuditableItemStreamComponent.getEntries`
 
 ***
 
@@ -606,4 +632,4 @@ NotFoundError if the stream is not found.
 
 #### Implementation of
 
-`Omit.getEntryObjects`
+`IAuditableItemStreamComponent.getEntryObjects`

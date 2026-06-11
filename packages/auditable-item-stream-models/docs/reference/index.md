@@ -33,6 +33,7 @@
 - [IAuditableItemStreamListEntryObjectsResponse](interfaces/IAuditableItemStreamListEntryObjectsResponse.md)
 - [IAuditableItemStreamListRequest](interfaces/IAuditableItemStreamListRequest.md)
 - [IAuditableItemStreamListResponse](interfaces/IAuditableItemStreamListResponse.md)
+- [IAuditableItemStreamRemoveProofRequest](interfaces/IAuditableItemStreamRemoveProofRequest.md)
 - [IAuditableItemStreamUpdateEntryRequest](interfaces/IAuditableItemStreamUpdateEntryRequest.md)
 - [IAuditableItemStreamUpdateRequest](interfaces/IAuditableItemStreamUpdateRequest.md)
 - [IAuditableItemStreamEventBusStreamCreated](interfaces/IAuditableItemStreamEventBusStreamCreated.md)
