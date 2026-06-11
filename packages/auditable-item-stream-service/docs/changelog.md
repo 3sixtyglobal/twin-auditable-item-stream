@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.0.3-next.21](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.20...auditable-item-stream-service-v0.0.3-next.21) (2026-06-11)
+
+
+### Features
+
+* organization identifiers ([#81](https://github.com/iotaledger/twin-auditable-item-stream/issues/81)) ([2ec82bd](https://github.com/iotaledger/twin-auditable-item-stream/commit/2ec82bd18136fddf982c60968d6b0ff89575d51c))
+
+
+### Bug Fixes
+
+* add removeProof to ais REST surface ([#80](https://github.com/iotaledger/twin-auditable-item-stream/issues/80)) ([c1ea8ae](https://github.com/iotaledger/twin-auditable-item-stream/commit/c1ea8aee6aa7b4620b92b88e0406cbf235d92cc3))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.20 to 0.0.3-next.21
+
 ## [0.0.3-next.20](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.19...auditable-item-stream-service-v0.0.3-next.20) (2026-06-03)
 
 
