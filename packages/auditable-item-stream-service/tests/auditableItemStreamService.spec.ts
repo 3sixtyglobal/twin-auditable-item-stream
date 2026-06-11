@@ -984,51 +984,27 @@ describe("AuditableItemStreamService", () => {
 		);
 	});
 
-	test("Can create proof on update when organizationIdentity becomes available", async () => {
+	test("Returns error when creating stream without organization identity in context", async () => {
 		const service = new AuditableItemStreamService();
 
-		// Create stream without organization identity in context
 		vi.mocked(ContextIdStore.getContextIds).mockImplementationOnce(async () => ({
 			[ContextIdKeys.Node]: TEST_NODE_IDENTITY,
 			[ContextIdKeys.Tenant]: TEST_TENANT_IDENTITY,
 			[ContextIdKeys.User]: TEST_USER_IDENTITY
 		}));
 
-		const streamId = await service.create({
-			"@context": [
-				SchemaOrgContexts.Context,
-				AuditableItemStreamContexts.Context,
-				AuditableItemStreamContexts.ContextCommon
-			],
-			type: AuditableItemStreamTypes.Stream
-		});
-
-		expectStreamIdFormat(streamId);
-		const streamEntityId = getStreamEntityId(streamId);
-
-		expect(streamStorage.getStore()[0].organizationIdentity).toBeUndefined();
-		expect(streamStorage.getStore()[0].proofId).toBeUndefined();
-		expect(notarizationStorage.getStore()).toHaveLength(0);
-
-		// Update the stream — context now returns org identity via the default mock
-		const result = await service.get(streamId);
-		await service.update({ ...result.stream });
-
-		await waitForProofGeneration();
-
-		expect(streamStorage.getStore()[0]).toMatchObject({
-			id: streamEntityId,
-			organizationIdentity: TEST_ORGANIZATION_IDENTITY,
-			proofId: expect.stringContaining("immutable-proof:")
-		});
-
-		const notarizationStore = notarizationStorage.getStore();
-		expect(notarizationStore).toHaveLength(1);
-		expect(notarizationStore[0]).toMatchObject({
-			mode: "locked",
-			transferLockUntilDestroyed: true,
-			controllerIdentity: TEST_ORGANIZATION_IDENTITY,
-			owner: TEST_ORGANIZATION_IDENTITY
+		await expect(
+			service.create({
+				"@context": [
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
+				],
+				type: AuditableItemStreamTypes.Stream
+			})
+		).rejects.toMatchObject({
+			source: "ContextIdHelper",
+			properties: { key: ContextIdKeys.Organization }
 		});
 	});
 

@@ -22,7 +22,7 @@ import {
 	type IAuditableItemStreamEventBusStreamUpdated,
 	type IAuditableItemStreamList
 } from "@twin.org/auditable-item-stream-models";
-import { ContextIdKeys, ContextIdStore } from "@twin.org/context";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import {
 	Coerce,
 	ComponentFactory,
@@ -217,8 +217,12 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		Guards.object(AuditableItemStreamService.CLASS_NAME, nameof(stream), stream);
 
 		const contextIds = await ContextIdStore.getContextIds();
+		ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 		try {
+			const ownerOrganizationId =
+				contextIds[ContextIdKeys.UserOrganization] ?? contextIds[ContextIdKeys.Organization];
+
 			const id = RandomHelper.generateUuidV7("compact");
 
 			const schemaValidationFailures: IValidationFailure[] = [];
@@ -253,12 +257,12 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				contextIds,
 				indexCounter: 0,
 				immutableInterval: stream?.immutableInterval ?? this._defaultImmutableInterval,
-				organizationIdentity: contextIds?.[ContextIdKeys.Organization]
+				organizationIdentity: ownerOrganizationId
 			};
 
 			const streamEntity: AuditableItemStream = {
 				id,
-				organizationIdentity: contextIds?.[ContextIdKeys.Organization],
+				organizationIdentity: ownerOrganizationId,
 				userIdentity: contextIds?.[ContextIdKeys.User],
 				dateCreated: context.now,
 				immutableInterval: context.immutableInterval,
@@ -421,12 +425,13 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			const contextIds = await ContextIdStore.getContextIds();
-
+			const ownerOrganizationId =
+				contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
 			if (
 				!Is.stringValue(streamEntity.organizationIdentity) &&
-				Is.stringValue(contextIds?.[ContextIdKeys.Organization])
+				Is.stringValue(ownerOrganizationId)
 			) {
-				streamEntity.organizationIdentity = contextIds?.[ContextIdKeys.Organization];
+				streamEntity.organizationIdentity = ownerOrganizationId;
 				changed = true;
 			}
 
@@ -728,16 +733,6 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				);
 			}
 
-			// If the stream does not have an organization identity yet, set it from the context.
-			// This is needed for the proof creation and immutability of the stream and entries.
-			if (
-				!Is.stringValue(streamEntity.organizationIdentity) &&
-				Is.stringValue(contextIds?.[ContextIdKeys.Organization])
-			) {
-				streamEntity.organizationIdentity = contextIds?.[ContextIdKeys.Organization];
-				await this._streamStorage.set(streamEntity);
-			}
-
 			if (streamEntity.closed) {
 				await MetricHelper.metricIncrement(
 					this._telemetryComponent,
@@ -952,8 +947,6 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
 
-		const contextIds = await ContextIdStore.getContextIds();
-
 		const urnParsed = Urn.fromValidString(streamId);
 
 		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
@@ -1022,13 +1015,16 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				);
 			}
 
+			const contextIds = await ContextIdStore.getContextIds();
+			const ownerOrganizationId =
+				contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
+
 			const context: IAuditableItemStreamServiceContext = {
 				now: new Date(Date.now()).toISOString(),
 				contextIds,
 				indexCounter: streamEntity.numberOfItems,
 				immutableInterval: streamEntity.immutableInterval,
-				organizationIdentity:
-					streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
+				organizationIdentity: streamEntity.organizationIdentity ?? ownerOrganizationId
 			};
 
 			await this.setEntry(context, streamEntity.id, {
@@ -1071,8 +1067,6 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	public async removeEntry(streamId: string, entryId: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
-
-		const contextIds = await ContextIdStore.getContextIds();
 
 		const urnParsed = Urn.fromValidString(streamId);
 
@@ -1131,13 +1125,16 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			if (Is.empty(result.entity.dateDeleted)) {
+				const contextIds = await ContextIdStore.getContextIds();
+				const ownerOrganizationId =
+					contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
+
 				const context: IAuditableItemStreamServiceContext = {
 					now: new Date(Date.now()).toISOString(),
 					contextIds,
 					indexCounter: streamEntity.numberOfItems,
 					immutableInterval: streamEntity.immutableInterval,
-					organizationIdentity:
-						streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
+					organizationIdentity: streamEntity.organizationIdentity ?? ownerOrganizationId
 				};
 
 				await this.setEntry(context, streamEntity.id, {

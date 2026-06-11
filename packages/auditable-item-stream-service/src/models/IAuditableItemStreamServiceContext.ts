@@ -29,5 +29,5 @@ export interface IAuditableItemStreamServiceContext {
 	/**
 	 * The identity of the organization which controls the stream.
 	 */
-	organizationIdentity?: string;
+	organizationIdentity: string;
 }

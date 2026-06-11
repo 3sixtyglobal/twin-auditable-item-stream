@@ -35,8 +35,8 @@ export class AuditableItemStream {
 	/**
 	 * The identity of the organization which controls the stream.
 	 */
-	@property({ type: "string", optional: true })
-	public organizationIdentity?: string;
+	@property({ type: "string" })
+	public organizationIdentity!: string;
 
 	/**
 	 * The identity of the user which created the stream.
