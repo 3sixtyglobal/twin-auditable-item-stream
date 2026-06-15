@@ -171,23 +171,21 @@ describe("AuditableItemStreamService", () => {
 
 		// Mock the module helper to execute the method in the same thread, so we don't have to create an engine.
 		// terminate() awaits all in-flight tasks so stop() drains them before teardown, preventing cross-test leaks.
-		ModuleHelper.execModuleMethodThreadMessage = vi
-			.fn()
-			.mockImplementation((module, completed) => {
-				const inFlight: Promise<void>[] = [];
-				return {
-					executeMethod: (method: string, args?: unknown, _contextIds?: IContextIds): void => {
-						const task = (async () => {
-							const res = await ModuleHelper.execModuleMethod(module, method, args as unknown[]);
-							completed(method, res);
-						})();
-						inFlight.push(task);
-					},
-					terminate: vi.fn().mockImplementation(async () => {
-						await Promise.allSettled(inFlight);
-					})
-				};
-			});
+		ModuleHelper.execModuleMethodThreadMessage = vi.fn().mockImplementation((module, completed) => {
+			const inFlight: Promise<void>[] = [];
+			return {
+				executeMethod: (method: string, args?: unknown, _contextIds?: IContextIds): void => {
+					const task = (async () => {
+						const res = await ModuleHelper.execModuleMethod(module, method, args as unknown[]);
+						completed(method, res);
+					})();
+					inFlight.push(task);
+				},
+				terminate: vi.fn().mockImplementation(async () => {
+					await Promise.allSettled(inFlight);
+				})
+			};
+		});
 	});
 
 	afterAll(async () => {
