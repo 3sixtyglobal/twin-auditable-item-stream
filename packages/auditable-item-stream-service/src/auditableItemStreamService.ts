@@ -200,6 +200,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 	/**
 	 * Register all AIS metrics with the telemetry component.
+	 * @returns A promise that resolves when the metrics have been registered.
 	 */
 	public async start(): Promise<void> {
 		if (Is.undefined(this._telemetryComponent)) {
@@ -314,7 +315,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	/**
 	 * Close a stream.
 	 * @param id The id of the stream to close.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been closed.
 	 */
 	public async close(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(id), id);
@@ -368,7 +369,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	/**
 	 * Update a stream.
 	 * @param stream The stream to update, does not update entries.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been updated.
 	 */
 	public async update(
 		stream: Pick<IAuditableItemStream, "@context" | "type" | "id" | "annotationObject">
@@ -567,7 +568,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	/**
 	 * Delete the stream.
 	 * @param id The id of the stream to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been removed.
 	 */
 	public async remove(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(id), id);
@@ -937,7 +938,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param streamId The id of the stream to update.
 	 * @param entryId The id of the entry to update.
 	 * @param entryObject The object for the entry as JSON-LD.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been updated.
 	 */
 	public async updateEntry(
 		streamId: string,
@@ -1062,7 +1063,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Delete from the stream.
 	 * @param streamId The id of the stream to remove from.
 	 * @param entryId The id of the entry to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been removed.
 	 */
 	public async removeEntry(streamId: string, entryId: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
@@ -1359,7 +1360,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	/**
 	 * Remove the proof for the stream and entries.
 	 * @param streamId The id of the stream to remove the proof from.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the proof has been removed.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
 	public async removeProof(streamId: string): Promise<void> {
@@ -1734,7 +1735,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Remove the verifiable storage for the stream and entries.
 	 * @param streamEntity The stream entity.
 	 * @param removeOnlyProof Should only the proof be removed.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entries have been processed.
 	 * @internal
 	 */
 	private async internalRemoveEntries(

@@ -24,7 +24,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	/**
 	 * Update a stream.
 	 * @param stream The stream to update, does not update entries.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been updated.
 	 */
 	update(
 		stream: Pick<IAuditableItemStream, "@context" | "type" | "id" | "annotationObject">
@@ -33,7 +33,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	/**
 	 * Close a stream.
 	 * @param id The id of the stream to close.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been closed.
 	 */
 	close(id: string): Promise<void>;
 
@@ -68,7 +68,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	/**
 	 * Delete the stream.
 	 * @param id The id of the stream to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been removed.
 	 */
 	remove(id: string): Promise<void>;
 
@@ -133,7 +133,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 * @param streamId The id of the stream to update.
 	 * @param entryId The id of the entry to update.
 	 * @param entryObject The object for the entry as JSON-LD.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been updated.
 	 */
 	updateEntry(streamId: string, entryId: string, entryObject: IJsonLdNodeObject): Promise<void>;
 
@@ -141,7 +141,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 * Remove from the stream.
 	 * @param streamId The id of the stream to remove from.
 	 * @param entryId The id of the entry to delete.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been removed.
 	 */
 	removeEntry(streamId: string, entryId: string): Promise<void>;
 
@@ -202,7 +202,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	/**
 	 * Remove the proof for the stream and entries.
 	 * @param streamId The id of the stream to remove the proof from.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the proof has been removed.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
 	removeProof(streamId: string): Promise<void>;

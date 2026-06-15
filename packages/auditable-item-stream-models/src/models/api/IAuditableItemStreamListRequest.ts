@@ -5,7 +5,7 @@ import type { HeaderTypes, MimeTypes } from "@twin.org/web";
 import type { IAuditableItemStream } from "../IAuditableItemStream.js";
 
 /**
- * Get the a list of the streams.
+ * Get a list of the streams.
  */
 export interface IAuditableItemStreamListRequest {
 	/**

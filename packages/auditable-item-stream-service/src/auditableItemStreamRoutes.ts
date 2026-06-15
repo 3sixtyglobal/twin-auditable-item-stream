@@ -43,7 +43,7 @@ import { SchemaOrgContexts, SchemaOrgTypes } from "@twin.org/standards-schema-or
 import { HeaderHelper, HeaderTypes, HttpStatusCode, MimeTypes } from "@twin.org/web";
 
 /**
- * The source used when communicating about these routes.
+ * The source identifier used when communicating errors from these routes.
  */
 const ROUTES_SOURCE = "auditableItemStreamRoutes";
 
@@ -1292,7 +1292,7 @@ export async function auditableItemStreamClose(
 }
 
 /**
- * Query the stream.
+ * List all streams.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
@@ -1381,7 +1381,7 @@ export async function auditableItemStreamCreateEntry(
 }
 
 /**
- * Get the stream.
+ * Delete an entry from the stream.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
@@ -1520,7 +1520,7 @@ export async function auditableItemStreamGetEntryObject(
 }
 
 /**
- * Query the stream.
+ * List the entries for a stream.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
@@ -1574,7 +1574,7 @@ export async function auditableItemStreamListEntries(
 }
 
 /**
- * Query the stream.
+ * List entries across all streams.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
@@ -1626,7 +1626,7 @@ export async function auditableItemStreamListEntriesNoStream(
 }
 
 /**
- * Query the stream objects.
+ * List the entry objects for a stream.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
@@ -1683,7 +1683,7 @@ export async function auditableItemStreamListEntryObjects(
 }
 
 /**
- * Query the stream objects.
+ * List entry objects across all streams.
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.

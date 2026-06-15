@@ -149,7 +149,7 @@ export class AuditableItemStreamRestClient
 	/**
 	 * Update a stream.
 	 * @param stream The stream to update, does not update entries.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been updated.
 	 */
 	public async update(
 		stream: Pick<IAuditableItemStream, "@context" | "type" | "id" | "annotationObject">
@@ -169,7 +169,7 @@ export class AuditableItemStreamRestClient
 	/**
 	 * Close the stream.
 	 * @param id The id of the stream to close.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been closed.
 	 */
 	public async close(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(id), id);
@@ -184,7 +184,7 @@ export class AuditableItemStreamRestClient
 	/**
 	 * Remove the notarization proof from a stream.
 	 * @param streamId The id of the stream.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the proof has been removed.
 	 */
 	public async removeProof(streamId: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(streamId), streamId);
@@ -201,7 +201,7 @@ export class AuditableItemStreamRestClient
 	/**
 	 * Delete the stream.
 	 * @param id The id of the stream to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been removed.
 	 */
 	public async remove(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(id), id);
@@ -353,7 +353,7 @@ export class AuditableItemStreamRestClient
 	 * @param id The id of the stream to update.
 	 * @param entryId The id of the entry to update.
 	 * @param entryObject The object for the entry as JSON-LD.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been updated.
 	 */
 	public async updateEntry(
 		id: string,
@@ -382,7 +382,7 @@ export class AuditableItemStreamRestClient
 	 * Remove from the stream.
 	 * @param id The id of the stream to remove from.
 	 * @param entryId The id of the entry to remove.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been removed.
 	 */
 	public async removeEntry(id: string, entryId: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(id), id);
