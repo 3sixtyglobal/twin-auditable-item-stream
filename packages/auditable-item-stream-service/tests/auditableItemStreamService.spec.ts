@@ -208,19 +208,22 @@ describe("AuditableItemStreamService", () => {
 	beforeEach(async () => {
 		streamStorage = new MemoryEntityStorageConnector<AuditableItemStream>({
 			entitySchema: nameof<AuditableItemStream>(),
-			partitionContextIds: [ContextIdKeys.Tenant]
+			partitionContextIds: [ContextIdKeys.Tenant],
+			config: { storageKey: "auditable-item-stream" }
 		});
 
 		streamEntryStorage = new MemoryEntityStorageConnector<AuditableItemStreamEntry>({
 			entitySchema: nameof<AuditableItemStreamEntry>(),
-			partitionContextIds: [ContextIdKeys.Tenant]
+			partitionContextIds: [ContextIdKeys.Tenant],
+			config: { storageKey: "auditable-item-stream-entry" }
 		});
 
 		EntityStorageConnectorFactory.register("auditable-item-stream", () => streamStorage);
 		EntityStorageConnectorFactory.register("auditable-item-stream-entry", () => streamEntryStorage);
 
 		notarizationStorage = new MemoryEntityStorageConnector<Notarization>({
-			entitySchema: nameof<Notarization>()
+			entitySchema: nameof<Notarization>(),
+			config: { storageKey: "notarization" }
 		});
 		EntityStorageConnectorFactory.register("notarization", () => notarizationStorage);
 
@@ -231,13 +234,15 @@ describe("AuditableItemStreamService", () => {
 
 		immutableProofStorage = new MemoryEntityStorageConnector<ImmutableProof>({
 			entitySchema: nameof<ImmutableProof>(),
-			partitionContextIds: [ContextIdKeys.Tenant]
+			partitionContextIds: [ContextIdKeys.Tenant],
+			config: { storageKey: "immutable-proof" }
 		});
 
 		EntityStorageConnectorFactory.register("immutable-proof", () => immutableProofStorage);
 
 		backgroundTaskStorage = new MemoryEntityStorageConnector<BackgroundTask>({
-			entitySchema: nameof<BackgroundTask>()
+			entitySchema: nameof<BackgroundTask>(),
+			config: { storageKey: "background-task" }
 		});
 		EntityStorageConnectorFactory.register("background-task", () => backgroundTaskStorage);
 
