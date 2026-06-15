@@ -92,7 +92,7 @@ async function waitForProofGeneration(proofCount: number = 1): Promise<void> {
 	let count = 0;
 	do {
 		await new Promise(resolve => setTimeout(resolve, 200));
-	} while (notarizationStorage.getStore().length < proofCount && count++ < proofCount * 40);
+	} while ((await notarizationStorage.getStore()).length < proofCount && count++ < proofCount * 40);
 }
 
 /**
@@ -169,15 +169,25 @@ describe("AuditableItemStreamService", () => {
 			[ContextIdKeys.User]: TEST_USER_IDENTITY
 		}));
 
-		// Mock the module helper to execute the method in the same thread, so we don't have to create an engine
+		// Mock the module helper to execute the method in the same thread, so we don't have to create an engine.
+		// terminate() awaits all in-flight tasks so stop() drains them before teardown, preventing cross-test leaks.
 		ModuleHelper.execModuleMethodThreadMessage = vi
 			.fn()
-			.mockImplementation((module, completed) => ({
-				executeMethod: async (method: string, args?: unknown, contextIds?: IContextIds) => {
-					const res = await ModuleHelper.execModuleMethod(module, method, args as unknown[]);
-					completed(method, res);
-				}
-			}));
+			.mockImplementation((module, completed) => {
+				const inFlight: Promise<void>[] = [];
+				return {
+					executeMethod: (method: string, args?: unknown, _contextIds?: IContextIds): void => {
+						const task = (async () => {
+							const res = await ModuleHelper.execModuleMethod(module, method, args as unknown[]);
+							completed(method, res);
+						})();
+						inFlight.push(task);
+					},
+					terminate: vi.fn().mockImplementation(async () => {
+						await Promise.allSettled(inFlight);
+					})
+				};
+			});
 	});
 
 	afterAll(async () => {
@@ -189,6 +199,12 @@ describe("AuditableItemStreamService", () => {
 			await backgroundTaskService.stop();
 			backgroundTaskService = undefined;
 		}
+
+		await notarizationStorage.teardown();
+		await streamStorage.teardown();
+		await streamEntryStorage.teardown();
+		await immutableProofStorage.teardown();
+		await backgroundTaskStorage.teardown();
 	});
 
 	beforeEach(async () => {
@@ -267,7 +283,7 @@ describe("AuditableItemStreamService", () => {
 
 		expectStreamIdFormat(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 
 		expect(streamStore).toMatchObject([
 			{
@@ -281,12 +297,12 @@ describe("AuditableItemStreamService", () => {
 			}
 		]);
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		expect(entryStore.length).toEqual(0);
 
 		await waitForProofGeneration();
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(1);
 		expect(notarizationStore[0]).toMatchObject({
 			mode: "locked",
@@ -339,7 +355,7 @@ describe("AuditableItemStreamService", () => {
 
 		expectStreamIdFormat(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		const streamEntityId = getStreamEntityId(streamId);
 
 		expect(streamStore).toHaveLength(1);
@@ -359,7 +375,7 @@ describe("AuditableItemStreamService", () => {
 			proofId: "immutable-proof:019179f26c5072028202020202020202"
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
@@ -389,7 +405,7 @@ describe("AuditableItemStreamService", () => {
 
 		await waitForProofGeneration(2);
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(2);
 		expect(notarizationStore[0]).toMatchObject({
 			mode: "locked",
@@ -452,7 +468,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
 			id: streamEntityId,
@@ -469,7 +485,7 @@ describe("AuditableItemStreamService", () => {
 			numberOfItems: 2
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
 			streamId: streamEntityId,
@@ -495,7 +511,7 @@ describe("AuditableItemStreamService", () => {
 		});
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toEqual([]);
 	});
 
@@ -537,7 +553,7 @@ describe("AuditableItemStreamService", () => {
 		});
 
 		await waitForProofGeneration(2);
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		const entryId0 = entryStore[0]?.id;
 		const entryId1 = entryStore[1]?.id;
 
@@ -614,7 +630,7 @@ describe("AuditableItemStreamService", () => {
 			]
 		});
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(2);
 		expect(notarizationStore[0]).toMatchObject({
 			mode: "locked",
@@ -681,7 +697,7 @@ describe("AuditableItemStreamService", () => {
 			verifyEntries: true
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		const entryId0 = entryStore[0]?.id;
 		const entryId1 = entryStore[1]?.id;
 
@@ -780,7 +796,7 @@ describe("AuditableItemStreamService", () => {
 			content: "Newest entry"
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		await streamEntryStorage.set({
 			...entryStore[0],
 			dateCreated: new Date(FIRST_TICK).toISOString()
@@ -915,7 +931,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
 			id: streamEntityId,
@@ -933,7 +949,7 @@ describe("AuditableItemStreamService", () => {
 			proofId: "immutable-proof:019179f26c5072028202020202020202"
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0]).toMatchObject({
 			streamId: streamEntityId,
@@ -960,7 +976,7 @@ describe("AuditableItemStreamService", () => {
 		});
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(2);
 		expect(notarizationStore[0]).toMatchObject({
 			mode: "locked",
@@ -1024,16 +1040,16 @@ describe("AuditableItemStreamService", () => {
 
 		await waitForProofGeneration();
 
-		const proofIdBefore = streamStorage.getStore()[0].proofId;
+		const proofIdBefore = (await streamStorage.getStore())[0].proofId;
 		expect(proofIdBefore).toBeDefined();
-		expect(notarizationStorage.getStore()).toHaveLength(1);
+		expect(await notarizationStorage.getStore()).toHaveLength(1);
 
 		// Update with no annotation change — proof already exists and org identity is set
 		const result = await service.get(streamId);
 		await service.update({ ...result.stream });
 
-		expect(streamStorage.getStore()[0].proofId).toBe(proofIdBefore);
-		expect(notarizationStorage.getStore()).toHaveLength(1);
+		expect((await streamStorage.getStore())[0].proofId).toBe(proofIdBefore);
+		expect(await notarizationStorage.getStore()).toHaveLength(1);
 	});
 
 	test("Can add a stream entry to an existing stream", async () => {
@@ -1085,7 +1101,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
@@ -1106,7 +1122,7 @@ describe("AuditableItemStreamService", () => {
 
 		await waitForProofGeneration(2);
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 
 		expect(entryStore).toHaveLength(3);
 		expect(entryStore[0]).toMatchObject({
@@ -1146,7 +1162,7 @@ describe("AuditableItemStreamService", () => {
 		expect(entryStore[0].id).not.toEqual(entryStore[1].id);
 		expect(entryStore[1].id).not.toEqual(entryStore[2].id);
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(2);
 		expect(notarizationStore[0]).toMatchObject({
 			mode: "locked",
@@ -1186,7 +1202,7 @@ describe("AuditableItemStreamService", () => {
 		const stream = await service.get(streamId);
 		expect(stream.stream.closed).toBe(true);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0].closed).toBe(true);
 	});
@@ -1205,7 +1221,7 @@ describe("AuditableItemStreamService", () => {
 		const stream = await service.get(streamId);
 		expect(stream.stream.mode).toBeUndefined();
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0].mode).toBeUndefined();
 	});
@@ -1225,7 +1241,7 @@ describe("AuditableItemStreamService", () => {
 		const stream = await service.get(streamId);
 		expect(stream.stream.mode).toBe("default");
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0].mode).toBe("default");
 	});
@@ -1289,7 +1305,7 @@ describe("AuditableItemStreamService", () => {
 		const stream = await service.get(streamId);
 		expect(stream.stream.closed).toBe(true);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0].closed).toBe(true);
 
@@ -1515,7 +1531,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
@@ -1534,10 +1550,10 @@ describe("AuditableItemStreamService", () => {
 			proofId: "immutable-proof:019179f26c5072028202020202020202"
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		expect(entryStore).toHaveLength(12);
 
-		const notarizationStore = notarizationStorage.getStore();
+		const notarizationStore = await notarizationStorage.getStore();
 		expect(notarizationStore).toHaveLength(3);
 	});
 
@@ -1621,7 +1637,7 @@ describe("AuditableItemStreamService", () => {
 			}
 		});
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
 			id: streamEntityId,
@@ -1696,7 +1712,7 @@ describe("AuditableItemStreamService", () => {
 			content: "This is an entry note 1"
 		});
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		const streamEntityId = getStreamEntityId(streamId);
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
@@ -1765,7 +1781,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
 			id: streamEntityId,
@@ -1783,7 +1799,7 @@ describe("AuditableItemStreamService", () => {
 			proofId: "immutable-proof:019179f26c5072028202020202020202"
 		});
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 
 		expect(entryStore).toHaveLength(2);
 		expect(entryStore[0].dateDeleted).toEqual("2024-08-22T11:56:56.272Z");
@@ -1849,7 +1865,7 @@ describe("AuditableItemStreamService", () => {
 		expectStreamIdFormat(streamId);
 		const streamEntityId = getStreamEntityId(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toHaveLength(1);
 		expect(streamStore[0]).toMatchObject({
 			id: streamEntityId,
@@ -1866,7 +1882,7 @@ describe("AuditableItemStreamService", () => {
 			numberOfItems: 2
 		});
 
-		const streamEntryStore = streamEntryStorage.getStore();
+		const streamEntryStore = await streamEntryStorage.getStore();
 		expect(streamEntryStore).toHaveLength(2);
 		expect(streamEntryStore[0]).toMatchObject({
 			streamId: streamEntityId,
@@ -1933,10 +1949,10 @@ describe("AuditableItemStreamService", () => {
 
 		await service.remove(streamId);
 
-		const streamStore = streamStorage.getStore();
+		const streamStore = await streamStorage.getStore();
 		expect(streamStore).toEqual([]);
 
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 		expect(entryStore).toEqual([]);
 	});
 
@@ -1982,7 +1998,7 @@ describe("AuditableItemStreamService", () => {
 		await service.get(streamId, undefined, undefined, { includeEntries: true });
 
 		const entriesAndCursor = await service.getEntries(streamId, { verifyEntries: true });
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 
 		expect(entriesAndCursor.entries).toEqual({
 			"@context": [
@@ -2080,7 +2096,7 @@ describe("AuditableItemStreamService", () => {
 				}
 			]
 		});
-		const entryStore = streamEntryStorage.getStore();
+		const entryStore = await streamEntryStorage.getStore();
 
 		expect(entriesAndCursor.entries).toEqual({
 			"@context": [
