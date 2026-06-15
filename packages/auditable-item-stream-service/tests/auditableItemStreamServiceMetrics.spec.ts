@@ -128,7 +128,7 @@ describe("AuditableItemStreamService — metrics", () => {
 		ModuleHelper.execModuleMethodThreadMessage = vi.fn().mockImplementation((module, completed) => {
 			const inFlight: Promise<void>[] = [];
 			return {
-				executeMethod: (method: string, args?: unknown, _contextIds?: IContextIds): void => {
+				executeMethod: (method: string, args?: unknown, contextIds?: IContextIds): void => {
 					const task = (async () => {
 						const res = await ModuleHelper.execModuleMethod(module, method, args as unknown[]);
 						completed(method, res);
