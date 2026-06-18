@@ -1,9 +1,10 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import {
+	HttpContextIdKeys,
 	HttpParameterHelper,
+	HttpUrlHelper,
 	type ICreatedResponse,
-	type IHostingComponent,
 	type IHttpRequestContext,
 	type INoContentResponse,
 	type INotFoundResponse,
@@ -37,6 +38,7 @@ import {
 	type IAuditableItemStreamUpdateEntryRequest,
 	type IAuditableItemStreamUpdateRequest
 } from "@twin.org/auditable-item-stream-models";
+import { ContextIdStore } from "@twin.org/context";
 import { Coerce, ComponentFactory, Guards, Is } from "@twin.org/core";
 import { nameof } from "@twin.org/nameof";
 import { SchemaOrgContexts, SchemaOrgTypes } from "@twin.org/standards-schema-org";
@@ -1165,10 +1167,6 @@ export async function auditableItemStreamGet(
 	);
 	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.id), request.pathParams.id);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const result = await component.get(
 		request.pathParams.id,
@@ -1188,8 +1186,12 @@ export async function auditableItemStreamGet(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
@@ -1310,10 +1312,6 @@ export async function auditableItemStreamList(
 		request.query
 	);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 
 	const result = await component.query(
@@ -1331,8 +1329,12 @@ export async function auditableItemStreamList(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
@@ -1539,10 +1541,6 @@ export async function auditableItemStreamListEntries(
 	);
 	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.id), request.pathParams.id);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 
 	const result = await component.getEntries(request.pathParams.id, {
@@ -1560,8 +1558,12 @@ export async function auditableItemStreamListEntries(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
@@ -1591,10 +1593,6 @@ export async function auditableItemStreamListEntriesNoStream(
 		request
 	);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 
 	const result = await component.getEntries(undefined, {
@@ -1612,8 +1610,12 @@ export async function auditableItemStreamListEntriesNoStream(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
@@ -1649,10 +1651,6 @@ export async function auditableItemStreamListEntryObjects(
 	);
 	Guards.stringValue(ROUTES_SOURCE, nameof(request.pathParams.id), request.pathParams.id);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 
 	const result = await component.getEntryObjects(request.pathParams.id, {
@@ -1669,8 +1667,12 @@ export async function auditableItemStreamListEntryObjects(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
@@ -1700,10 +1702,6 @@ export async function auditableItemStreamListEntryObjectsNoStream(
 		request
 	);
 
-	const hostingComponent = ComponentFactory.get<IHostingComponent>(
-		httpRequestContext.hostingComponentType ?? "hosting"
-	);
-
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 
 	const result = await component.getEntryObjects(undefined, {
@@ -1720,8 +1718,12 @@ export async function auditableItemStreamListEntryObjectsNoStream(
 	};
 
 	if (Is.stringValue(result.cursor)) {
+		const contextIds = await ContextIdStore.getContextIds();
 		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			await hostingComponent.buildPublicUrl(httpRequestContext.serverRequest.url),
+			HttpUrlHelper.replaceOrigin(
+				httpRequestContext.serverRequest.url,
+				contextIds?.[HttpContextIdKeys.PublicOrigin]
+			),
 			{ cursor: result.cursor },
 			"next"
 		);
