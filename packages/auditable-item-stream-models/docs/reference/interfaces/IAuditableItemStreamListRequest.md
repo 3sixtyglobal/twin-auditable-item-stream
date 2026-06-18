@@ -1,6 +1,6 @@
 # Interface: IAuditableItemStreamListRequest
 
-Get the a list of the streams.
+Get a list of the streams.
 
 ## Properties
 

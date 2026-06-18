@@ -176,7 +176,7 @@ The stream to update, does not update entries.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the stream has been updated.
 
 #### Implementation of
 
@@ -202,7 +202,7 @@ The id of the stream to close.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the stream has been closed.
 
 #### Implementation of
 
@@ -228,7 +228,7 @@ The id of the stream.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the proof has been removed.
 
 #### Implementation of
 
@@ -254,7 +254,7 @@ The id of the stream to remove.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the stream has been removed.
 
 #### Implementation of
 
@@ -462,7 +462,7 @@ The object for the entry as JSON-LD.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the entry has been updated.
 
 #### Implementation of
 
@@ -494,7 +494,7 @@ The id of the entry to remove.
 
 `Promise`\<`void`\>
 
-Nothing.
+A promise that resolves when the entry has been removed.
 
 #### Implementation of
 
