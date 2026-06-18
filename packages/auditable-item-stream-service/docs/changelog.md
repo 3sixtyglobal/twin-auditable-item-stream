@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.0.3-next.22](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.21...auditable-item-stream-service-v0.0.3-next.22) (2026-06-18)
+
+
+### Features
+
+* remove hosting component ([#84](https://github.com/iotaledger/twin-auditable-item-stream/issues/84)) ([148c1a7](https://github.com/iotaledger/twin-auditable-item-stream/commit/148c1a788a2104bb1b5a83f629d88175f495cd09))
+
+
+### Bug Fixes
+
+* use async getStore in tests ([7bf0aab](https://github.com/iotaledger/twin-auditable-item-stream/commit/7bf0aab543cda544133dcae7e852d9752968ee4e))
+* use async getStore in tests ([ff176b0](https://github.com/iotaledger/twin-auditable-item-stream/commit/ff176b04798da8909c5921ed101998028d082890))
+* use async getStore in tests ([eb595e7](https://github.com/iotaledger/twin-auditable-item-stream/commit/eb595e72a348d4d030dba8378a0def3a6d5148dc))
+* use async getStore in tests ([fb827d6](https://github.com/iotaledger/twin-auditable-item-stream/commit/fb827d658d8217714887f44f2d02811a8af6f4d6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.0.3-next.21 to 0.0.3-next.22
+
 ## [0.0.3-next.21](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.0.3-next.20...auditable-item-stream-service-v0.0.3-next.21) (2026-06-11)
 
 
