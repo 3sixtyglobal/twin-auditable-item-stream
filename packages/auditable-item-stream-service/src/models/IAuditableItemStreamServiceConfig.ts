@@ -12,4 +12,9 @@ export interface IAuditableItemStreamServiceConfig {
 	 * @default 10
 	 */
 	defaultImmutableInterval?: number;
+
+	/**
+	 * The timeout in milliseconds to wait when acquiring a mutex lock, defaults to the Mutex default of 5000ms.
+	 */
+	mutexTimeoutMs?: number;
 }

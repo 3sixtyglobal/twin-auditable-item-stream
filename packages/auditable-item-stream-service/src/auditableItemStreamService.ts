@@ -157,6 +157,12 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	private readonly _defaultImmutableInterval: number;
 
 	/**
+	 * The timeout in milliseconds when acquiring a mutex lock.
+	 * @internal
+	 */
+	private readonly _mutexTimeoutMs?: number;
+
+	/**
 	 * Create a new instance of AuditableItemStreamService.
 	 * @param options The dependencies for the auditable item stream connector.
 	 */
@@ -183,6 +189,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 		this._config = options?.config ?? {};
 		this._defaultImmutableInterval = this._config.defaultImmutableInterval ?? 10;
+		this._mutexTimeoutMs = Coerce.integer(options?.config?.mutexTimeoutMs);
 
 		SchemaOrgDataTypes.registerRedirects();
 		AuditableItemStreamDataTypes.registerTypes();
@@ -330,7 +337,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamId = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamId, { throwOnTimeout: true });
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
 			const streamEntity = await this._streamStorage.get(streamId);
 
@@ -387,7 +394,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamId = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamId, { throwOnTimeout: true });
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
 			const schemaValidationFailures: IValidationFailure[] = [];
 			await DataTypeHelper.validate(
@@ -583,7 +590,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamId = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamId, { throwOnTimeout: true });
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 
 		try {
 			const streamEntity = await this._streamStorage.get(streamId);
@@ -722,7 +729,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamIdParts = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamIdParts, { throwOnTimeout: true });
+		await Mutex.lock(streamIdParts, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
 			const streamEntity = await this._streamStorage.get(streamIdParts);
 
@@ -967,7 +974,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamNamespaceId = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true });
+		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
 			const streamEntryNamespaceId = urnParsedEntry.namespaceMethod();
 
@@ -1087,7 +1094,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamNamespaceId = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true });
+		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
 			const streamEntryNamespaceId = urnParsedEntry.namespaceMethod();
 
@@ -1376,7 +1383,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		const streamIdParts = urnParsed.namespaceSpecific(0);
-		await Mutex.lock(streamIdParts, { throwOnTimeout: true });
+		await Mutex.lock(streamIdParts, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 
 		try {
 			const streamEntity = await this._streamStorage.get(streamIdParts);
