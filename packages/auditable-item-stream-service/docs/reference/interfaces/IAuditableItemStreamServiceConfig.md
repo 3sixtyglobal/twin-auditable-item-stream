@@ -17,3 +17,11 @@ You can override this value on stream creation.
 ```ts
 10
 ```
+
+***
+
+### mutexTimeoutMs? {#mutextimeoutms}
+
+> `optional` **mutexTimeoutMs?**: `number`
+
+The timeout in milliseconds to wait when acquiring a mutex lock, defaults to the Mutex default of 5000ms.
