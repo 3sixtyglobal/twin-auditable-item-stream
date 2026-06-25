@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.9.0](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.0...auditable-item-stream-rest-client-v0.9.0) (2026-06-25)
+
+
+### Features
+
+* release to production ([94d5757](https://github.com/iotaledger/twin-auditable-item-stream/commit/94d5757ff28b5462564f4ded56c8a3db781f2901))
+* release to production ([#94](https://github.com/iotaledger/twin-auditable-item-stream/issues/94)) ([dc0df9d](https://github.com/iotaledger/twin-auditable-item-stream/commit/dc0df9d624a65771d8c3f756570ad6d2e0249f8e))
+* release to production ([#97](https://github.com/iotaledger/twin-auditable-item-stream/issues/97)) ([d1f8cf4](https://github.com/iotaledger/twin-auditable-item-stream/commit/d1f8cf4cda650536335b92bd96b7817ab00c4e24))
+* update dependencies ([9ff038b](https://github.com/iotaledger/twin-auditable-item-stream/commit/9ff038b7e76e9fb586be4f2321231f04258ef794))
+* use shared store mechanism ([#7](https://github.com/iotaledger/twin-auditable-item-stream/issues/7)) ([2aca4b8](https://github.com/iotaledger/twin-auditable-item-stream/commit/2aca4b85b0102f91c90619f02b116541786cf539))
+
+
+### Bug Fixes
+
+* query params force coercion ([fcdd52c](https://github.com/iotaledger/twin-auditable-item-stream/commit/fcdd52cf8262a3bc19f6e7e9e6ef145890a9c8aa))
+
 ## [0.9.0-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.0-next.0...auditable-item-stream-rest-client-v0.9.0-next.1) (2026-06-24)
 
 
