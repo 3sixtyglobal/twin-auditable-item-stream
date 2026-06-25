@@ -4,33 +4,33 @@
 
 The types of auditable item stream data.
 
-## Type declaration
+## Type Declaration
 
-### Stream
+### Stream {#stream}
 
 > `readonly` **Stream**: `"AuditableItemStream"` = `"AuditableItemStream"`
 
 Represents auditable item stream.
 
-### StreamList
+### StreamList {#streamlist}
 
 > `readonly` **StreamList**: `"AuditableItemStreamList"` = `"AuditableItemStreamList"`
 
 Represents auditable item stream list.
 
-### StreamEntry
+### StreamEntry {#streamentry}
 
 > `readonly` **StreamEntry**: `"AuditableItemStreamEntry"` = `"AuditableItemStreamEntry"`
 
 Represents auditable item stream entry.
 
-### StreamEntryList
+### StreamEntryList {#streamentrylist}
 
 > `readonly` **StreamEntryList**: `"AuditableItemStreamEntryList"` = `"AuditableItemStreamEntryList"`
 
 Represents auditable item stream entry list.
 
-### StreamEntryObjectList
+### StreamEntryObjectList {#streamentryobjectlist}
 
 > `readonly` **StreamEntryObjectList**: `"AuditableItemStreamEntryObjectList"` = `"AuditableItemStreamEntryObjectList"`
 

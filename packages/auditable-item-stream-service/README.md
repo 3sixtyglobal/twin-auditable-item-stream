@@ -1,6 +1,6 @@
-# TWIN Auditable Item Stream Service
+# Auditable Item Stream Service
 
-Auditable Item Stream contract implementation and REST endpoint definitions.
+This package provides the service layer for auditable item streams, including stream and entry lifecycle operations, entity schema initialisation, and REST route generation for API hosts.
 
 ## Installation
 

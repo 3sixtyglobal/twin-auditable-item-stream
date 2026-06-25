@@ -1,29 +1,14 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IJsonLdContextDefinitionElement, IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import type { IImmutableProofVerification } from "@twin.org/immutable-proof-models";
-import type { AuditableItemStreamContexts } from "./auditableItemStreamContexts";
-import type { AuditableItemStreamTypes } from "./auditableItemStreamTypes";
-import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry";
+import type { SchemaOrgTypes } from "@twin.org/standards-schema-org";
+import type { IAuditableItemStreamBase } from "./IAuditableItemStreamBase.js";
+import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry.js";
 
 /**
  * Interface describing an auditable item stream.
  */
-export interface IAuditableItemStream {
-	/**
-	 * JSON-LD Context.
-	 */
-	"@context": [
-		typeof AuditableItemStreamContexts.ContextRoot,
-		typeof AuditableItemStreamContexts.ContextRootCommon,
-		...IJsonLdContextDefinitionElement[]
-	];
-
-	/**
-	 * JSON-LD Type.
-	 */
-	type: typeof AuditableItemStreamTypes.Stream;
-
+export interface IAuditableItemStream extends IAuditableItemStreamBase {
 	/**
 	 * The id of the stream.
 	 */
@@ -31,51 +16,52 @@ export interface IAuditableItemStream {
 
 	/**
 	 * The date/time of when the stream was created.
+	 * @json-ld namespace:sch
 	 */
 	dateCreated: string;
 
 	/**
 	 * The date/time of when the stream was modified.
+	 * @json-ld namespace:sch
 	 */
 	dateModified?: string;
 
 	/**
-	 * The identity of the node which controls the stream.
+	 * The identity of the organization which controls the stream.
+	 * @json-ld namespace:twin-common
 	 */
-	nodeIdentity: string;
+	organizationIdentity?: string;
 
 	/**
 	 * The identity of the user who created the stream.
+	 * @json-ld namespace:twin-common
 	 */
-	userIdentity: string;
-
-	/**
-	 * The object to associate with the entry as JSON-LD.
-	 */
-	annotationObject?: IJsonLdNodeObject;
+	userIdentity?: string;
 
 	/**
 	 * The id of the immutable proof for the stream.
+	 * @json-ld type:sch:identifier
 	 */
 	proofId?: string;
 
 	/**
-	 * After how many entries do we add immutable checks.
+	 * How many entries are in the stream.
+	 * @json-ld id:sch:numberOfItems
 	 */
-	immutableInterval: number;
+	numberOfItems?: number;
 
 	/**
 	 * Entries in the stream.
+	 * @json-ld container:set
 	 */
-	entries?: IAuditableItemStreamEntry[];
-
-	/**
-	 * The cursor for the stream entries.
-	 */
-	cursor?: string;
+	entries?: {
+		type: typeof SchemaOrgTypes.ItemList;
+		[SchemaOrgTypes.ItemListElement]: IAuditableItemStreamEntry[];
+	};
 
 	/**
 	 * The verification of the stream.
+	 * @json-ld id
 	 */
 	verification?: IImmutableProofVerification;
 }

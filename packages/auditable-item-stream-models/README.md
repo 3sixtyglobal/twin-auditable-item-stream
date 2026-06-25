@@ -1,6 +1,6 @@
-# TWIN Auditable Item Stream Models
+# Auditable Item Stream Models
 
-Models which define the structure of the auditable item stream connectors and services.
+This package provides the shared model layer for auditable item streams, including interfaces, schema mappings, contexts, and topics that keep stream data structures consistent across components.
 
 ## Installation
 

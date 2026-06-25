@@ -1,6 +1,6 @@
-# TWIN Auditable Item Stream REST Client
+# Auditable Item Stream REST Client
 
-Auditable Item Stream contract implementation which can connect to REST endpoints.
+This package provides a client for calling auditable item stream REST endpoints, with helper methods for creating streams, managing entries, querying results, and handling paging.
 
 ## Installation
 

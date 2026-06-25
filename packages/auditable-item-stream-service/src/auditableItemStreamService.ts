@@ -2,9 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	AuditableItemStreamContexts,
+	AuditableItemStreamDataTypes,
+	AuditableItemStreamMetricIds,
+	AuditableItemStreamMetrics,
+	AuditableItemStreamModes,
 	AuditableItemStreamTopics,
 	AuditableItemStreamTypes,
 	type IAuditableItemStream,
+	type IAuditableItemStreamBase,
 	type IAuditableItemStreamComponent,
 	type IAuditableItemStreamEntry,
 	type IAuditableItemStreamEntryList,
@@ -17,22 +22,28 @@ import {
 	type IAuditableItemStreamEventBusStreamUpdated,
 	type IAuditableItemStreamList
 } from "@twin.org/auditable-item-stream-models";
+import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import {
 	Coerce,
 	ComponentFactory,
-	Converter,
 	GeneralError,
 	Guards,
 	Is,
+	Mutex,
 	NotFoundError,
 	ObjectHelper,
 	RandomHelper,
-	StringHelper,
 	Urn,
 	Validation,
 	type IValidationFailure
 } from "@twin.org/core";
-import { JsonLdHelper, JsonLdProcessor, type IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import { DataTypeHelper } from "@twin.org/data-core";
+import {
+	JsonLdDataTypes,
+	JsonLdHelper,
+	JsonLdProcessor,
+	type IJsonLdNodeObject
+} from "@twin.org/data-json-ld";
 import {
 	ComparisonOperator,
 	LogicalOperator,
@@ -47,42 +58,52 @@ import {
 import type { IEventBusComponent } from "@twin.org/event-bus-models";
 import {
 	ImmutableProofContexts,
+	ImmutableProofDataTypes,
 	type IImmutableProofComponent,
 	type IImmutableProofVerification
 } from "@twin.org/immutable-proof-models";
-import { nameof } from "@twin.org/nameof";
+import { nameof, nameofKebabCase } from "@twin.org/nameof";
 import {
 	SchemaOrgContexts,
 	SchemaOrgDataTypes,
 	SchemaOrgTypes
 } from "@twin.org/standards-schema-org";
-import type { AuditableItemStream } from "./entities/auditableItemStream";
-import type { AuditableItemStreamEntry } from "./entities/auditableItemStreamEntry";
-import type { IAuditableItemStreamServiceConfig } from "./models/IAuditableItemStreamServiceConfig";
-import type { IAuditableItemStreamServiceConstructorOptions } from "./models/IAuditableItemStreamServiceConstructorOptions";
-import type { IAuditableItemStreamServiceContext } from "./models/IAuditableItemStreamServiceContext";
+import { MetricHelper, type ITelemetryComponent } from "@twin.org/telemetry-models";
+import type { AuditableItemStream } from "./entities/auditableItemStream.js";
+import type { AuditableItemStreamEntry } from "./entities/auditableItemStreamEntry.js";
+import type { IAuditableItemStreamServiceConfig } from "./models/IAuditableItemStreamServiceConfig.js";
+import type { IAuditableItemStreamServiceConstructorOptions } from "./models/IAuditableItemStreamServiceConstructorOptions.js";
+import type { IAuditableItemStreamServiceContext } from "./models/IAuditableItemStreamServiceContext.js";
 
 /**
  * Class for performing auditable item stream operations.
  */
 export class AuditableItemStreamService implements IAuditableItemStreamComponent {
 	/**
-	 * The namespace for the service.
+	 * Runtime name for the class.
 	 */
-	public static readonly NAMESPACE: string = "ais";
+	public static readonly CLASS_NAME: string = nameof<AuditableItemStreamService>();
+
+	/**
+	 * The namespace for the service.
+	 * @internal
+	 */
+	private static readonly _NAMESPACE: string = "ais";
 
 	/**
 	 * The keys to pick when creating the proof for the stream.
+	 * @internal
 	 */
 	private static readonly _PROOF_KEYS_STREAM: (keyof AuditableItemStream)[] = [
 		"id",
-		"nodeIdentity",
+		"organizationIdentity",
 		"userIdentity",
 		"dateCreated"
 	];
 
 	/**
 	 * The keys to pick when creating the proof for the stream entry.
+	 * @internal
 	 */
 	private static readonly _PROOF_KEYS_STREAM_ENTRY: (keyof AuditableItemStreamEntry)[] = [
 		"id",
@@ -92,11 +113,6 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		"entryObject",
 		"index"
 	];
-
-	/**
-	 * Runtime name for the class.
-	 */
-	public readonly CLASS_NAME: string = nameof<AuditableItemStreamService>();
 
 	/**
 	 * The configuration for the connector.
@@ -129,10 +145,22 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	private readonly _eventBusComponent?: IEventBusComponent;
 
 	/**
+	 * The telemetry component.
+	 * @internal
+	 */
+	private readonly _telemetryComponent?: ITelemetryComponent;
+
+	/**
 	 * The default interval for the integrity checks.
 	 * @internal
 	 */
 	private readonly _defaultImmutableInterval: number;
+
+	/**
+	 * The timeout in milliseconds when acquiring a mutex lock.
+	 * @internal
+	 */
+	private readonly _mutexTimeoutMs?: number;
 
 	/**
 	 * Create a new instance of AuditableItemStreamService.
@@ -144,102 +172,117 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		);
 
 		this._streamStorage = EntityStorageConnectorFactory.get(
-			options?.streamEntityStorageType ?? StringHelper.kebabCase(nameof<AuditableItemStream>())
+			options?.streamEntityStorageType ?? nameofKebabCase<AuditableItemStream>()
 		);
 
 		this._streamEntryStorage = EntityStorageConnectorFactory.get(
-			options?.streamEntryEntityStorageType ??
-				StringHelper.kebabCase(nameof<AuditableItemStreamEntry>())
+			options?.streamEntryEntityStorageType ?? nameofKebabCase<AuditableItemStreamEntry>()
 		);
 
 		if (Is.stringValue(options?.eventBusComponentType)) {
 			this._eventBusComponent = ComponentFactory.get(options.eventBusComponentType);
 		}
 
+		this._telemetryComponent = ComponentFactory.getIfExists<ITelemetryComponent>(
+			options?.telemetryComponentType
+		);
+
 		this._config = options?.config ?? {};
 		this._defaultImmutableInterval = this._config.defaultImmutableInterval ?? 10;
+		this._mutexTimeoutMs = Coerce.integer(options?.config?.mutexTimeoutMs);
 
 		SchemaOrgDataTypes.registerRedirects();
+		AuditableItemStreamDataTypes.registerTypes();
+		JsonLdDataTypes.registerTypes();
+		ImmutableProofDataTypes.registerTypes();
+	}
+
+	/**
+	 * Returns the class name of the component.
+	 * @returns The class name of the component.
+	 */
+	public className(): string {
+		return AuditableItemStreamService.CLASS_NAME;
+	}
+
+	/**
+	 * Register all AIS metrics with the telemetry component.
+	 * @returns A promise that resolves when the metrics have been registered.
+	 */
+	public async start(): Promise<void> {
+		if (Is.undefined(this._telemetryComponent)) {
+			return;
+		}
+		await MetricHelper.createMetrics(this._telemetryComponent, AuditableItemStreamMetrics);
 	}
 
 	/**
 	 * Create a new stream.
 	 * @param stream The stream to create.
-	 * @param stream.annotationObject The object for the stream as JSON-LD.
-	 * @param stream.entries Entries to store in the stream.
-	 * @param options Options for creating the stream.
-	 * @param options.immutableInterval After how many entries do we add immutable checks, defaults to service configured value.
-	 * A value of 0 will disable integrity checks, 1 will be every item, or any other integer for an interval.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
 	 * @returns The id of the new stream item.
 	 */
-	public async create(
-		stream: {
-			annotationObject?: IJsonLdNodeObject;
-			entries?: {
-				entryObject: IJsonLdNodeObject;
-			}[];
-		},
-		options?: {
-			immutableInterval?: number;
-		},
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<string> {
-		Guards.object(this.CLASS_NAME, nameof(stream), stream);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+	public async create(stream: IAuditableItemStreamBase): Promise<string> {
+		Guards.object(AuditableItemStreamService.CLASS_NAME, nameof(stream), stream);
+
+		const contextIds = await ContextIdStore.getContextIds();
+		ContextIdHelper.guard(contextIds, ContextIdKeys.Organization);
 
 		try {
+			const ownerOrganizationId =
+				contextIds[ContextIdKeys.UserOrganization] ?? contextIds[ContextIdKeys.Organization];
+
+			const id = RandomHelper.generateUuidV7("compact");
+
+			const schemaValidationFailures: IValidationFailure[] = [];
+			await DataTypeHelper.validate(
+				nameof(stream),
+				`${AuditableItemStreamContexts.Namespace}${AuditableItemStreamTypes.Stream}Base`,
+				stream,
+				schemaValidationFailures
+			);
+			Validation.asValidationError(
+				AuditableItemStreamService.CLASS_NAME,
+				nameof(stream),
+				schemaValidationFailures
+			);
+
+			if (stream.closed && !Is.arrayValue(stream.entries?.[SchemaOrgTypes.ItemListElement])) {
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "closedRequiresEntries");
+			}
+
 			if (Is.object(stream.annotationObject)) {
 				const validationFailures: IValidationFailure[] = [];
 				await JsonLdHelper.validate(stream.annotationObject, validationFailures);
 				Validation.asValidationError(
-					this.CLASS_NAME,
+					AuditableItemStreamService.CLASS_NAME,
 					nameof(stream.annotationObject),
 					validationFailures
 				);
 			}
 
-			const id = Converter.bytesToHex(RandomHelper.generate(32), false);
-
 			const context: IAuditableItemStreamServiceContext = {
 				now: new Date(Date.now()).toISOString(),
-				userIdentity,
-				nodeIdentity,
+				contextIds,
 				indexCounter: 0,
-				immutableInterval: options?.immutableInterval ?? this._defaultImmutableInterval
+				immutableInterval: stream?.immutableInterval ?? this._defaultImmutableInterval,
+				organizationIdentity: ownerOrganizationId
 			};
 
 			const streamEntity: AuditableItemStream = {
 				id,
-				nodeIdentity,
-				userIdentity,
+				organizationIdentity: ownerOrganizationId,
+				userIdentity: contextIds?.[ContextIdKeys.User],
 				dateCreated: context.now,
 				immutableInterval: context.immutableInterval,
-				indexCounter: 0,
-				proofId: ""
+				closed: stream.closed,
+				mode: stream.mode,
+				numberOfItems: 0
 			};
 
-			// Create the JSON-LD object we want to use for the proof
-			// this is a subset of fixed properties from the stream object.
-			const streamModel = await this.streamEntityToJsonLd(
-				ObjectHelper.pick(
-					streamEntity,
-					AuditableItemStreamService._PROOF_KEYS_STREAM
-				) as AuditableItemStream
-			);
+			const streamUrn = await this.createStreamProof(streamEntity, context.immutableInterval);
 
-			// Create the proof for the stream object
-			streamEntity.proofId = await this._immutableProofComponent.create(
-				streamModel,
-				userIdentity,
-				nodeIdentity
-			);
-
-			if (Is.arrayValue(stream.entries)) {
-				for (const entry of stream.entries) {
+			if (Is.arrayValue(stream.entries?.[SchemaOrgTypes.ItemListElement])) {
+				for (const entry of stream.entries[SchemaOrgTypes.ItemListElement]) {
 					await this.setEntry(context, id, entry);
 				}
 			}
@@ -247,24 +290,204 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			// Add these dynamic properties to the stream object after the proof has been created.
 			streamEntity.dateModified = context.now;
 			streamEntity.annotationObject = stream.annotationObject;
-			streamEntity.indexCounter = context.indexCounter;
+			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
 
-			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamCreated>(
-				AuditableItemStreamTopics.StreamCreated,
-				{ id: streamModel.id }
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.StreamsCreated,
+				{
+					mode: streamEntity.mode ?? AuditableItemStreamModes.Default,
+					immutableInterval: context.immutableInterval
+				}
 			);
 
-			return streamModel.id;
+			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamCreated>(
+				AuditableItemStreamTopics.StreamCreated,
+				{ id: streamUrn }
+			);
+
+			return streamUrn;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "createFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"createFailed",
+				undefined,
+				error
+			);
+		}
+	}
+
+	/**
+	 * Close a stream.
+	 * @param id The id of the stream to close.
+	 * @returns A promise that resolves when the stream has been closed.
+	 */
+	public async close(id: string): Promise<void> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(id), id);
+
+		const urnParsed = Urn.fromValidString(id);
+
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
+				id
+			});
+		}
+
+		const streamId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
+		try {
+			const streamEntity = await this._streamStorage.get(streamId);
+
+			if (Is.empty(streamEntity)) {
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", id);
+			}
+
+			if (!streamEntity.closed) {
+				streamEntity.closed = true;
+				streamEntity.dateModified = new Date(Date.now()).toISOString();
+
+				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.StreamsClosed
+				);
+
+				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamUpdated>(
+					AuditableItemStreamTopics.StreamUpdated,
+					{ id }
+				);
+			}
+		} catch (error) {
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"closeFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamId);
+		}
+	}
+
+	/**
+	 * Update a stream.
+	 * @param stream The stream to update, does not update entries.
+	 * @returns A promise that resolves when the stream has been updated.
+	 */
+	public async update(
+		stream: Pick<IAuditableItemStream, "@context" | "type" | "id" | "annotationObject">
+	): Promise<void> {
+		Guards.object(AuditableItemStreamService.CLASS_NAME, nameof(stream), stream);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(stream.id), stream.id);
+
+		const urnParsed = Urn.fromValidString(stream.id);
+
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
+				id: stream.id
+			});
+		}
+
+		const streamId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
+		try {
+			const schemaValidationFailures: IValidationFailure[] = [];
+			await DataTypeHelper.validate(
+				nameof(stream),
+				`${AuditableItemStreamContexts.Namespace}${AuditableItemStreamTypes.Stream}`,
+				stream,
+				schemaValidationFailures
+			);
+			Validation.asValidationError(
+				AuditableItemStreamService.CLASS_NAME,
+				nameof(stream),
+				schemaValidationFailures
+			);
+
+			const streamEntity = await this._streamStorage.get(streamId);
+
+			if (Is.empty(streamEntity)) {
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", stream.id);
+			}
+
+			if (Is.object(stream.annotationObject)) {
+				const validationFailures: IValidationFailure[] = [];
+				await JsonLdHelper.validate(stream.annotationObject, validationFailures);
+				Validation.asValidationError(
+					AuditableItemStreamService.CLASS_NAME,
+					nameof(stream.annotationObject),
+					validationFailures
+				);
+			}
+
+			let changed = false;
+
+			if (!ObjectHelper.equal(streamEntity.annotationObject, stream.annotationObject, false)) {
+				streamEntity.annotationObject = stream.annotationObject;
+				changed = true;
+			}
+
+			const contextIds = await ContextIdStore.getContextIds();
+			const ownerOrganizationId =
+				contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
+			if (
+				!Is.stringValue(streamEntity.organizationIdentity) &&
+				Is.stringValue(ownerOrganizationId)
+			) {
+				streamEntity.organizationIdentity = ownerOrganizationId;
+				changed = true;
+			}
+
+			if (
+				!Is.stringValue(streamEntity.proofId) &&
+				Is.stringValue(streamEntity.organizationIdentity)
+			) {
+				await this.createStreamProof(
+					streamEntity,
+					streamEntity.immutableInterval ?? this._defaultImmutableInterval
+				);
+				if (Is.stringValue(streamEntity.proofId)) {
+					changed = true;
+				}
+			}
+
+			if (changed) {
+				streamEntity.dateModified = new Date(Date.now()).toISOString();
+
+				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.StreamsUpdated
+				);
+
+				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamUpdated>(
+					AuditableItemStreamTopics.StreamUpdated,
+					{ id: stream.id }
+				);
+			}
+		} catch (error) {
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"updatingFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamId);
 		}
 	}
 
 	/**
 	 * Get a stream header without the entries.
 	 * @param id The id of the stream to get.
+	 * @param cursor Cursor to use for next chunk of entries.
+	 * @param limit Limit the number of entries to return, only applicable if includeEntries is true.
 	 * @param options Additional options for the get operation.
 	 * @param options.includeEntries Whether to include the entries, defaults to false.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
@@ -275,41 +498,60 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 */
 	public async get(
 		id: string,
+		cursor?: string,
+		limit?: number,
 		options?: {
 			includeEntries?: boolean;
 			includeDeleted?: boolean;
 			verifyStream?: boolean;
 			verifyEntries?: boolean;
 		}
-	): Promise<IAuditableItemStream> {
-		Guards.stringValue(this.CLASS_NAME, nameof(id), id);
+	): Promise<{
+		stream: IAuditableItemStream;
+		cursor?: string;
+	}> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(id), id);
 
 		const urnParsed = Urn.fromValidString(id);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id
 			});
 		}
 
 		try {
 			const streamId = urnParsed.namespaceSpecific(0);
+
 			const streamEntity = await this._streamStorage.get(streamId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", id);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", id);
 			}
 
 			const verifyStream = options?.verifyStream ?? false;
 			const verifyEntries = options?.verifyEntries ?? false;
 
-			const streamModel = await this.streamEntityToJsonLd(streamEntity);
+			const streamModel = this.streamEntityToJsonLd(streamEntity);
+			let returnCursor;
 
 			if (options?.includeEntries) {
-				const result = await this.findEntries(streamId, options?.includeDeleted, verifyEntries);
-				streamModel.entries = result.entries;
-				streamModel.cursor = result.cursor;
+				const result = await this.findEntries(
+					streamId,
+					options?.includeDeleted,
+					verifyEntries,
+					undefined,
+					undefined,
+					undefined,
+					limit,
+					cursor
+				);
+				streamModel.entries = {
+					type: SchemaOrgTypes.ItemList,
+					[SchemaOrgTypes.ItemListElement]: result.entries
+				};
+				returnCursor = result.cursor;
 			}
 
 			if (verifyStream && Is.stringValue(streamEntity.proofId)) {
@@ -317,119 +559,68 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 
 			if (verifyStream || verifyEntries) {
-				streamModel["@context"].push(ImmutableProofContexts.ContextRoot);
+				streamModel["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			return JsonLdProcessor.compact(streamModel, streamModel["@context"]);
+			const result = await JsonLdProcessor.compact(streamModel, streamModel["@context"]);
+			return {
+				stream: result,
+				cursor: returnCursor
+			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "getFailed", undefined, error);
-		}
-	}
-
-	/**
-	 * Update a stream.
-	 * @param stream The stream to update.
-	 * @param stream.id The id of the stream to update.
-	 * @param stream.annotationObject The object for the stream as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
-	 */
-	public async update(
-		stream: {
-			id: string;
-			annotationObject?: IJsonLdNodeObject;
-		},
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<void> {
-		Guards.object(this.CLASS_NAME, nameof(stream), stream);
-		Guards.stringValue(this.CLASS_NAME, nameof(stream.id), stream.id);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
-
-		const urnParsed = Urn.fromValidString(stream.id);
-
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
-				id: stream.id
-			});
-		}
-
-		try {
-			const streamId = urnParsed.namespaceSpecific(0);
-			const streamEntity = await this._streamStorage.get(streamId);
-
-			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", stream.id);
-			}
-
-			if (Is.object(stream.annotationObject)) {
-				const validationFailures: IValidationFailure[] = [];
-				await JsonLdHelper.validate(stream.annotationObject, validationFailures);
-				Validation.asValidationError(
-					this.CLASS_NAME,
-					nameof(stream.annotationObject),
-					validationFailures
-				);
-			}
-
-			if (!ObjectHelper.equal(streamEntity.annotationObject, stream.annotationObject, false)) {
-				streamEntity.annotationObject = stream.annotationObject;
-				streamEntity.dateModified = new Date(Date.now()).toISOString();
-
-				await this._streamStorage.set(streamEntity);
-
-				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamUpdated>(
-					AuditableItemStreamTopics.StreamUpdated,
-					{ id: stream.id }
-				);
-			}
-		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "updateFailed", undefined, error);
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "getFailed", undefined, error);
 		}
 	}
 
 	/**
 	 * Delete the stream.
 	 * @param id The id of the stream to remove.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been removed.
 	 */
-	public async remove(id: string, userIdentity?: string, nodeIdentity?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(id), id);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+	public async remove(id: string): Promise<void> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(id), id);
 
 		const urnParsed = Urn.fromValidString(id);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id
 			});
 		}
 
+		const streamId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
+
 		try {
-			const streamId = urnParsed.namespaceSpecific(0);
 			const streamEntity = await this._streamStorage.get(streamId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", id);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", id);
 			}
 
-			await this.internalRemoveEntries(streamEntity, false, nodeIdentity);
+			await this.internalRemoveEntries(streamEntity, false);
 
 			await this._streamStorage.remove(streamEntity.id);
+
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.StreamsDeleted
+			);
 
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamDeleted>(
 				AuditableItemStreamTopics.StreamDeleted,
 				{ id }
 			);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "removingFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"removingFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamId);
 		}
 	}
 
@@ -439,8 +630,8 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param orderBy The order for the results, defaults to created.
 	 * @param orderByDirection The direction for the order, defaults to descending.
 	 * @param properties The properties to return, if not provided defaults to id, created and object.
-	 * @param cursor The cursor to request the next page of entities.
-	 * @param pageSize The maximum number of entities in a page.
+	 * @param cursor The cursor to request the next chunk of entities.
+	 * @param limit Limit the number of entities to return.
 	 * @returns The entities, which can be partial if a limited keys list was provided.
 	 */
 	public async query(
@@ -449,8 +640,11 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		orderByDirection?: SortDirection,
 		properties?: (keyof IAuditableItemStream)[],
 		cursor?: string,
-		pageSize?: number
-	): Promise<IAuditableItemStreamList> {
+		limit?: number
+	): Promise<{
+		entries: IAuditableItemStreamList;
+		cursor?: string;
+	}> {
 		try {
 			let propertiesToReturn: (keyof IAuditableItemStream)[] = properties ?? [
 				"id",
@@ -484,25 +678,33 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				],
 				propertiesToReturn as (keyof AuditableItemStream)[],
 				cursor,
-				pageSize
+				limit
 			);
 
 			const list: IAuditableItemStreamList = {
 				"@context": [
-					SchemaOrgContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRootCommon
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
 				],
 				type: [SchemaOrgTypes.ItemList, AuditableItemStreamTypes.StreamList],
 				[SchemaOrgTypes.ItemListElement]: (results.entities as AuditableItemStream[]).map(e =>
 					this.streamEntityToJsonLd(e)
-				),
-				[SchemaOrgTypes.NextItem]: results.cursor
+				)
 			};
 
-			return JsonLdProcessor.compact(list, list["@context"]);
+			const result = await JsonLdProcessor.compact(list, list["@context"]);
+			return {
+				entries: result,
+				cursor: results.cursor
+			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "queryingFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"queryingFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -510,43 +712,53 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Create an entry in the stream.
 	 * @param streamId The id of the stream to update.
 	 * @param entryObject The object for the stream as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
 	 * @returns The id of the created entry, if not provided.
 	 */
-	public async createEntry(
-		streamId: string,
-		entryObject: IJsonLdNodeObject,
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<string> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+	public async createEntry(streamId: string, entryObject: IJsonLdNodeObject): Promise<string> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
+
+		const contextIds = await ContextIdStore.getContextIds();
 
 		const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
+		const streamIdParts = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamIdParts, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
-			const streamIdParts = urnParsed.namespaceSpecific(0);
 			const streamEntity = await this._streamStorage.get(streamIdParts);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamIdParts);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamNotFound",
+					streamIdParts
+				);
+			}
+
+			if (streamEntity.closed) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ClosedStreamRejections,
+					{ operation: "createEntry" }
+				);
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "streamClosed", {
+					id: streamId
+				});
 			}
 
 			const context: IAuditableItemStreamServiceContext = {
 				now: new Date(Date.now()).toISOString(),
-				userIdentity,
-				nodeIdentity,
-				indexCounter: streamEntity.indexCounter,
-				immutableInterval: streamEntity.immutableInterval
+				contextIds,
+				indexCounter: streamEntity.numberOfItems,
+				immutableInterval: streamEntity.immutableInterval,
+				organizationIdentity:
+					streamEntity.organizationIdentity ?? contextIds?.[ContextIdKeys.Organization]
 			};
 
 			const createdId = await this.setEntry(context, streamEntity.id, {
@@ -554,11 +766,21 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			});
 
 			streamEntity.dateModified = context.now;
-			streamEntity.indexCounter = context.indexCounter;
+			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
 
-			const fullId = new Urn(AuditableItemStreamService.NAMESPACE, [
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.EntriesCreated,
+				{
+					hasProof:
+						context.immutableInterval > 0 &&
+						(context.indexCounter - 1) % context.immutableInterval === 0
+				}
+			);
+
+			const fullId = new Urn(AuditableItemStreamService._NAMESPACE, [
 				streamEntity.id,
 				createdId
 			]).toString();
@@ -570,7 +792,14 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 			return fullId;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "creatingEntryFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"creatingEntryFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamIdParts);
 		}
 	}
 
@@ -590,56 +819,65 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			verifyEntry?: boolean;
 		}
 	): Promise<IAuditableItemStreamEntry> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(entryId), entryId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
 
 		const urnParsed = Urn.fromValidString(streamId);
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
 		const urnParsedEntry = Urn.fromValidString(entryId);
-		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: entryId
 			});
 		}
 
 		try {
 			const streamNamespaceId = urnParsed.namespaceSpecific(0);
+
 			const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", streamId);
 			}
 
 			const verifyEntry = options?.verifyEntry ?? false;
 
 			const entryNamespaceId = urnParsedEntry.namespaceSpecific(1);
-			const result = await this.findEntry(
-				streamEntity.nodeIdentity,
-				streamEntity.id,
-				entryNamespaceId,
-				verifyEntry
-			);
+			const result = await this.findEntry(streamEntity.id, entryNamespaceId, verifyEntry);
 			if (Is.empty(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamEntryNotFound", entryId);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamEntryNotFound",
+					entryId
+				);
 			}
 
 			const entry = this.streamEntryEntityToJsonLd(result.entity);
 
 			if (verifyEntry) {
-				entry["@context"].push(ImmutableProofContexts.ContextRoot);
+				entry["@context"] = JsonLdProcessor.combineContexts(
+					entry["@context"],
+					ImmutableProofContexts.Context
+				) as IAuditableItemStreamEntry["@context"];
 				entry.verification = result.verification;
 			}
 
-			return JsonLdProcessor.compact(entry, entry["@context"]);
+			const result2 = await JsonLdProcessor.compact(entry, entry["@context"]);
+			return result2;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "gettingEntryFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"gettingEntryFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -651,48 +889,54 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @throws NotFoundError if the stream is not found.
 	 */
 	public async getEntryObject(streamId: string, entryId: string): Promise<IJsonLdNodeObject> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(entryId), entryId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
 
 		const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
 		const urnParsedEntry = Urn.fromValidString(entryId);
 
-		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: entryId
 			});
 		}
 
 		try {
 			const streamNamespaceId = urnParsed.namespaceSpecific(0);
+
 			const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", streamId);
 			}
 
 			const entryNamespaceId = urnParsedEntry.namespaceSpecific(1);
-			const result = await this.findEntry(
-				streamEntity.nodeIdentity,
-				streamEntity.id,
-				entryNamespaceId
-			);
+			const result = await this.findEntry(streamEntity.id, entryNamespaceId);
 			if (Is.empty(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamEntryNotFound", entryId);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamEntryNotFound",
+					entryId
+				);
 			}
 
 			return result.entity.entryObject;
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "gettingEntryObjectFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"gettingEntryObjectFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
@@ -701,69 +945,94 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param streamId The id of the stream to update.
 	 * @param entryId The id of the entry to update.
 	 * @param entryObject The object for the entry as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been updated.
 	 */
 	public async updateEntry(
 		streamId: string,
 		entryId: string,
-		entryObject: IJsonLdNodeObject,
-		userIdentity?: string,
-		nodeIdentity?: string
+		entryObject: IJsonLdNodeObject
 	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(entryId), entryId);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
 
 		const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
 		const urnParsedEntry = Urn.fromValidString(entryId);
 
-		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: entryId
 			});
 		}
 
+		const streamNamespaceId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
-			const streamNamespaceId = urnParsed.namespaceMethod();
 			const streamEntryNamespaceId = urnParsedEntry.namespaceMethod();
 
 			if (streamNamespaceId !== streamEntryNamespaceId) {
-				throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-					streamNamespaceId,
-					streamEntryNamespaceId
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+					namespace: streamNamespaceId,
+					id: streamEntryNamespaceId
 				});
 			}
 
 			const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", streamId);
+			}
+
+			if (streamEntity.closed) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ClosedStreamRejections,
+					{ operation: "updateEntry" }
+				);
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "streamClosed", {
+					id: streamId
+				});
+			}
+
+			if (streamEntity.mode === AuditableItemStreamModes.AppendOnly) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.AppendOnlyRejections,
+					{ operation: "updateEntry" }
+				);
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "appendOnlyNoEntryUpdates", {
+					id: streamId
+				});
 			}
 
 			const entryNamespaceId = urnParsedEntry.namespaceSpecific(1);
-			const existing = await this.findEntry(nodeIdentity, streamEntity.id, entryNamespaceId);
+			const existing = await this.findEntry(streamEntity.id, entryNamespaceId);
 			if (Is.empty(existing)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamEntryNotFound", entryId);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamEntryNotFound",
+					entryId
+				);
 			}
+
+			const contextIds = await ContextIdStore.getContextIds();
+			const ownerOrganizationId =
+				contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
 
 			const context: IAuditableItemStreamServiceContext = {
 				now: new Date(Date.now()).toISOString(),
-				userIdentity,
-				nodeIdentity,
-				indexCounter: streamEntity.indexCounter,
-				immutableInterval: streamEntity.immutableInterval
+				contextIds,
+				indexCounter: streamEntity.numberOfItems,
+				immutableInterval: streamEntity.immutableInterval,
+				organizationIdentity: streamEntity.organizationIdentity ?? ownerOrganizationId
 			};
 
 			await this.setEntry(context, streamEntity.id, {
@@ -772,16 +1041,28 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			});
 
 			streamEntity.dateModified = context.now;
-			streamEntity.indexCounter = context.indexCounter;
+			streamEntity.numberOfItems = context.indexCounter;
 
 			await this._streamStorage.set(streamEntity);
+
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.EntriesUpdated
+			);
 
 			await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamEntryUpdated>(
 				AuditableItemStreamTopics.StreamEntryUpdated,
 				{ id: streamId, entryId }
 			);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "updatingEntryFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"updatingEntryFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamNamespaceId);
 		}
 	}
 
@@ -789,72 +1070,79 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Delete from the stream.
 	 * @param streamId The id of the stream to remove from.
 	 * @param entryId The id of the entry to remove.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been removed.
 	 */
-	public async removeEntry(
-		streamId: string,
-		entryId: string,
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(entryId), entryId);
-		Guards.stringValue(this.CLASS_NAME, nameof(userIdentity), userIdentity);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+	public async removeEntry(streamId: string, entryId: string): Promise<void> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(entryId), entryId);
 
 		const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
 		const urnParsedEntry = Urn.fromValidString(entryId);
-		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsedEntry.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: entryId
 			});
 		}
 
+		const streamNamespaceId = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamNamespaceId, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
 		try {
-			const streamNamespaceId = urnParsed.namespaceMethod();
 			const streamEntryNamespaceId = urnParsedEntry.namespaceMethod();
 
 			if (streamNamespaceId !== streamEntryNamespaceId) {
-				throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-					streamNamespaceId,
-					streamEntryNamespaceId
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+					namespace: streamNamespaceId,
+					id: streamEntryNamespaceId
 				});
 			}
 
 			const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				throw new NotFoundError(AuditableItemStreamService.CLASS_NAME, "streamNotFound", streamId);
+			}
+
+			if (streamEntity.mode === AuditableItemStreamModes.AppendOnly) {
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.AppendOnlyRejections,
+					{ operation: "removeEntry" }
+				);
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "appendOnlyNoEntryRemovals", {
+					id: streamId
+				});
 			}
 
 			const entryNamespaceId = urnParsedEntry.namespaceSpecific(1);
-			const result = await this.findEntry(
-				streamEntity.nodeIdentity,
-				streamNamespaceId,
-				entryNamespaceId
-			);
+			const result = await this.findEntry(streamNamespaceId, entryNamespaceId);
 			if (Is.empty(result)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamEntryNotFound", entryId);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamEntryNotFound",
+					entryId
+				);
 			}
 
 			if (Is.empty(result.entity.dateDeleted)) {
+				const contextIds = await ContextIdStore.getContextIds();
+				const ownerOrganizationId =
+					contextIds?.[ContextIdKeys.UserOrganization] ?? contextIds?.[ContextIdKeys.Organization];
+
 				const context: IAuditableItemStreamServiceContext = {
 					now: new Date(Date.now()).toISOString(),
-					userIdentity,
-					nodeIdentity,
-					indexCounter: streamEntity.indexCounter,
-					immutableInterval: streamEntity.immutableInterval
+					contextIds,
+					indexCounter: streamEntity.numberOfItems,
+					immutableInterval: streamEntity.immutableInterval,
+					organizationIdentity: streamEntity.organizationIdentity ?? ownerOrganizationId
 				};
 
 				await this.setEntry(context, streamEntity.id, {
@@ -863,8 +1151,13 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				});
 
 				streamEntity.dateModified = context.now;
-				streamEntity.indexCounter = context.indexCounter;
+				streamEntity.numberOfItems = context.indexCounter;
 				await this._streamStorage.set(streamEntity);
+
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.EntriesDeleted
+				);
 
 				await this._eventBusComponent?.publish<IAuditableItemStreamEventBusStreamEntryDeleted>(
 					AuditableItemStreamTopics.StreamEntryDeleted,
@@ -872,51 +1165,71 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				);
 			}
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "removingEntryFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"removingEntryFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamNamespaceId);
 		}
 	}
 
 	/**
 	 * Get the entries for the stream.
-	 * @param streamId The id of the stream to get.
+	 * @param streamId The id of the stream to get, if undefined returns all matching entries.
 	 * @param options Additional options for the get operation.
 	 * @param options.conditions The conditions to filter the stream.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
 	 * @param options.verifyEntries Should the entries be verified, defaults to false.
-	 * @param options.pageSize How many entries to return.
+	 * @param options.limit How many entries to return.
 	 * @param options.cursor Cursor to use for next chunk of data.
 	 * @param options.order Retrieve the entries in ascending/descending time order, defaults to Ascending.
 	 * @returns The stream and entries if found.
 	 * @throws NotFoundError if the stream is not found.
 	 */
 	public async getEntries(
-		streamId: string,
+		streamId?: string,
 		options?: {
 			conditions?: IComparator[];
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
-			pageSize?: number;
+			limit?: number;
 			cursor?: string;
 			order?: SortDirection;
 		}
-	): Promise<IAuditableItemStreamEntryList> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
+	): Promise<{
+		entries: IAuditableItemStreamEntryList;
+		cursor?: string;
+	}> {
+		let streamNamespaceId;
+		if (!Is.empty(streamId)) {
+			Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 
-		const urnParsed = Urn.fromValidString(streamId);
+			const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
-				id: streamId
-			});
+			if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+					namespace: AuditableItemStreamService._NAMESPACE,
+					id: streamId
+				});
+			}
+
+			streamNamespaceId = urnParsed.namespaceSpecific(0);
 		}
 
 		try {
-			const streamNamespaceId = urnParsed.namespaceSpecific(0);
-			const streamEntity = await this._streamStorage.get(streamNamespaceId);
+			if (Is.stringValue(streamNamespaceId)) {
+				const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
-			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				if (Is.empty(streamEntity)) {
+					throw new NotFoundError(
+						AuditableItemStreamService.CLASS_NAME,
+						"streamNotFound",
+						streamId
+					);
+				}
 			}
 
 			const verifyEntries = options?.verifyEntries ?? false;
@@ -928,70 +1241,91 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				options?.conditions,
 				options?.order,
 				undefined,
-				options?.pageSize,
+				options?.limit,
 				options?.cursor
 			);
 
 			const list: IAuditableItemStreamEntryList = {
 				"@context": [
-					SchemaOrgContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRootCommon
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
 				],
 				type: [SchemaOrgTypes.ItemList, AuditableItemStreamTypes.StreamEntryList],
-				[SchemaOrgTypes.ItemListElement]: result.entries,
-				[SchemaOrgTypes.NextItem]: result.cursor
+				[SchemaOrgTypes.ItemListElement]: result.entries
 			};
 
 			if (verifyEntries) {
-				list["@context"].push(ImmutableProofContexts.ContextRoot);
+				list["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			return JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			return {
+				entries: result2,
+				cursor: result.cursor
+			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "gettingEntriesFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"gettingEntriesFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
 	/**
 	 * Get the entry objects for the stream.
-	 * @param streamId The id of the stream to get.
+	 * @param streamId The id of the stream to get, if undefined returns all matching entries.
 	 * @param options Additional options for the get operation.
 	 * @param options.conditions The conditions to filter the stream.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
-	 * @param options.pageSize How many entries to return.
+	 * @param options.limit How many entries to return.
 	 * @param options.cursor Cursor to use for next chunk of data.
 	 * @param options.order Retrieve the entries in ascending/descending time order, defaults to Ascending.
 	 * @returns The stream and entries if found.
 	 * @throws NotFoundError if the stream is not found.
 	 */
 	public async getEntryObjects(
-		streamId: string,
+		streamId?: string,
 		options?: {
 			conditions?: IComparator[];
 			includeDeleted?: boolean;
-			pageSize?: number;
+			limit?: number;
 			cursor?: string;
 			order?: SortDirection;
 		}
-	): Promise<IAuditableItemStreamEntryObjectList> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
+	): Promise<{
+		entries: IAuditableItemStreamEntryObjectList;
+		cursor?: string;
+	}> {
+		let streamNamespaceId;
+		if (!Is.empty(streamId)) {
+			Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 
-		const urnParsed = Urn.fromValidString(streamId);
+			const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
-				id: streamId
-			});
+			if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+				throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+					namespace: AuditableItemStreamService._NAMESPACE,
+					id: streamId
+				});
+			}
+
+			streamNamespaceId = urnParsed.namespaceSpecific(0);
 		}
 
 		try {
-			const streamNamespaceId = urnParsed.namespaceSpecific(0);
-			const streamEntity = await this._streamStorage.get(streamNamespaceId);
+			if (Is.stringValue(streamNamespaceId)) {
+				const streamEntity = await this._streamStorage.get(streamNamespaceId);
 
-			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamId);
+				if (Is.empty(streamEntity)) {
+					throw new NotFoundError(
+						AuditableItemStreamService.CLASS_NAME,
+						"streamNotFound",
+						streamId
+					);
+				}
 			}
 
 			const result = await this.findEntries(
@@ -1001,59 +1335,104 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				options?.conditions,
 				options?.order,
 				undefined,
-				options?.pageSize,
+				options?.limit,
 				options?.cursor
 			);
 
 			const list: IAuditableItemStreamEntryObjectList = {
 				"@context": [
-					SchemaOrgContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRootCommon
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Context,
+					AuditableItemStreamContexts.ContextCommon
 				],
 				type: [SchemaOrgTypes.ItemList, AuditableItemStreamTypes.StreamEntryObjectList],
-				[SchemaOrgTypes.ItemListElement]: result.entries.map(m => m.entryObject),
-				[SchemaOrgTypes.NextItem]: result.cursor
+				[SchemaOrgTypes.ItemListElement]: result.entries.map(m => m.entryObject)
 			};
 
-			return JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			return {
+				entries: result2,
+				cursor: result.cursor
+			};
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "gettingEntryObjectsFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"gettingEntryObjectsFailed",
+				undefined,
+				error
+			);
 		}
 	}
 
 	/**
-	 * Remove the verifiable storage for the stream and entries.
-	 * @param streamId The id of the stream to remove the storage from.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * Remove the proof for the stream and entries.
+	 * @param streamId The id of the stream to remove the proof from.
+	 * @returns A promise that resolves when the proof has been removed.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
-	public async removeVerifiable(streamId: string, nodeIdentity?: string): Promise<void> {
-		Guards.stringValue(this.CLASS_NAME, nameof(streamId), streamId);
-		Guards.stringValue(this.CLASS_NAME, nameof(nodeIdentity), nodeIdentity);
+	public async removeProof(streamId: string): Promise<void> {
+		Guards.stringValue(AuditableItemStreamService.CLASS_NAME, nameof(streamId), streamId);
 
 		const urnParsed = Urn.fromValidString(streamId);
 
-		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService.NAMESPACE) {
-			throw new GeneralError(this.CLASS_NAME, "namespaceMismatch", {
-				namespace: AuditableItemStreamService.NAMESPACE,
+		if (urnParsed.namespaceIdentifier() !== AuditableItemStreamService._NAMESPACE) {
+			throw new GeneralError(AuditableItemStreamService.CLASS_NAME, "namespaceMismatch", {
+				namespace: AuditableItemStreamService._NAMESPACE,
 				id: streamId
 			});
 		}
 
+		const streamIdParts = urnParsed.namespaceSpecific(0);
+		await Mutex.lock(streamIdParts, { throwOnTimeout: true, timeoutMs: this._mutexTimeoutMs });
+
 		try {
-			const streamIdParts = urnParsed.namespaceSpecific(0);
 			const streamEntity = await this._streamStorage.get(streamIdParts);
 
 			if (Is.empty(streamEntity)) {
-				throw new NotFoundError(this.CLASS_NAME, "streamNotFound", streamIdParts);
+				throw new NotFoundError(
+					AuditableItemStreamService.CLASS_NAME,
+					"streamNotFound",
+					streamIdParts
+				);
 			}
 
-			await this.internalRemoveEntries(streamEntity, true, nodeIdentity);
+			await this.internalRemoveEntries(streamEntity, true);
 		} catch (error) {
-			throw new GeneralError(this.CLASS_NAME, "removeVerifiableFailed", undefined, error);
+			throw new GeneralError(
+				AuditableItemStreamService.CLASS_NAME,
+				"removeProofFailed",
+				undefined,
+				error
+			);
+		} finally {
+			Mutex.unlock(streamIdParts);
 		}
+	}
+
+	/**
+	 * Create an immutable proof for the stream entity if the conditions are met.
+	 * @param streamEntity The stream entity to create the proof for.
+	 * @param immutableInterval The immutable interval for the stream.
+	 * @returns The proof id.
+	 * @internal
+	 */
+	private async createStreamProof(
+		streamEntity: AuditableItemStream,
+		immutableInterval: number
+	): Promise<string> {
+		const streamModel = this.streamEntityToJsonLd(
+			ObjectHelper.pick(streamEntity, AuditableItemStreamService._PROOF_KEYS_STREAM)
+		);
+
+		if (immutableInterval > 0 && Is.stringValue(streamModel.organizationIdentity)) {
+			streamEntity.proofId = await this._immutableProofComponent.create(streamModel);
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.ProofsCreatedStream
+			);
+		}
+
+		return streamModel.id;
 	}
 
 	/**
@@ -1067,19 +1446,22 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	): IAuditableItemStream & IJsonLdNodeObject {
 		const model: IAuditableItemStream & IJsonLdNodeObject = {
 			"@context": [
-				AuditableItemStreamContexts.ContextRoot,
-				AuditableItemStreamContexts.ContextRootCommon,
-				SchemaOrgContexts.ContextRoot
+				SchemaOrgContexts.Context,
+				AuditableItemStreamContexts.Context,
+				AuditableItemStreamContexts.ContextCommon
 			],
 			type: AuditableItemStreamTypes.Stream,
-			id: `${AuditableItemStreamService.NAMESPACE}:${streamEntity.id}`,
+			id: `${AuditableItemStreamService._NAMESPACE}:${streamEntity.id}`,
 			dateCreated: streamEntity.dateCreated,
 			dateModified: streamEntity.dateModified,
-			nodeIdentity: streamEntity.nodeIdentity,
+			organizationIdentity: streamEntity.organizationIdentity,
 			userIdentity: streamEntity.userIdentity,
 			annotationObject: streamEntity.annotationObject,
 			immutableInterval: streamEntity.immutableInterval,
-			proofId: streamEntity.proofId
+			proofId: streamEntity.proofId,
+			numberOfItems: streamEntity.numberOfItems,
+			closed: streamEntity.closed,
+			mode: streamEntity.mode
 		};
 
 		return model;
@@ -1093,15 +1475,15 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 */
 	private streamEntryEntityToJsonLd(
 		streamEntryEntity: AuditableItemStreamEntry
-	): IAuditableItemStreamEntry & IJsonLdNodeObject {
-		const streamEntryModel: IAuditableItemStreamEntry & IJsonLdNodeObject = {
+	): IAuditableItemStreamEntry {
+		const streamEntryModel: IAuditableItemStreamEntry = {
 			"@context": [
-				AuditableItemStreamContexts.ContextRoot,
-				AuditableItemStreamContexts.ContextRootCommon,
-				SchemaOrgContexts.ContextRoot
+				AuditableItemStreamContexts.Context,
+				AuditableItemStreamContexts.ContextCommon,
+				SchemaOrgContexts.Context
 			],
 			type: AuditableItemStreamTypes.StreamEntry,
-			id: `${AuditableItemStreamService.NAMESPACE}:${streamEntryEntity.streamId}:${streamEntryEntity.id}`,
+			id: `${AuditableItemStreamService._NAMESPACE}:${streamEntryEntity.streamId}:${streamEntryEntity.id}`,
 			dateCreated: streamEntryEntity.dateCreated,
 			dateModified: streamEntryEntity.dateModified,
 			dateDeleted: streamEntryEntity.dateDeleted,
@@ -1124,23 +1506,29 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	private async setEntry(
 		context: IAuditableItemStreamServiceContext,
 		streamId: string,
-		entry: Partial<AuditableItemStreamEntry>
+		entry: Partial<IAuditableItemStreamEntry>
 	): Promise<string> {
-		Guards.object(this.CLASS_NAME, nameof(entry), entry);
+		Guards.object(AuditableItemStreamService.CLASS_NAME, nameof(entry), entry);
+
+		const contextIds = await ContextIdStore.getContextIds();
 
 		if (Is.object(entry.entryObject)) {
 			const validationFailures: IValidationFailure[] = [];
 			await JsonLdHelper.validate(entry.entryObject, validationFailures);
-			Validation.asValidationError(this.CLASS_NAME, "entry.entryObject", validationFailures);
+			Validation.asValidationError(
+				AuditableItemStreamService.CLASS_NAME,
+				nameof(entry.entryObject),
+				validationFailures
+			);
 		}
 
 		const entity: AuditableItemStreamEntry = {
-			id: entry.id ?? Converter.bytesToHex(RandomHelper.generate(32), false),
+			id: entry.id ?? RandomHelper.generateUuidV7("compact"),
 			streamId,
 			dateCreated: entry.dateCreated ?? context.now,
 			dateDeleted: entry.dateDeleted,
 			entryObject: entry.entryObject ?? {},
-			userIdentity: context.userIdentity,
+			userIdentity: contextIds?.[ContextIdKeys.User],
 			index: entry.index ?? context.indexCounter++
 		};
 
@@ -1152,19 +1540,22 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		if (context.immutableInterval > 0 && entity.index % context.immutableInterval === 0) {
 			// Create the JSON-LD object we want to use for the proof
 			// this is a subset of fixed properties from the stream entry object.
-			const streamEntryModel = await this.streamEntryEntityToJsonLd(
-				ObjectHelper.pick(
-					entity,
-					AuditableItemStreamService._PROOF_KEYS_STREAM_ENTRY
-				) as AuditableItemStreamEntry
+			const streamEntryModel = this.streamEntryEntityToJsonLd(
+				ObjectHelper.pick(entity, AuditableItemStreamService._PROOF_KEYS_STREAM_ENTRY)
 			);
 
-			// Create the proof for the stream object
-			entity.proofId = await this._immutableProofComponent.create(
-				streamEntryModel,
-				context.userIdentity,
-				context.nodeIdentity
-			);
+			// Create the proof for the stream object but only if we have an organization identity,
+			// either from the stream or the context, as this is needed for the proof creation and immutability.
+			if (Is.stringValue(context.organizationIdentity)) {
+				entity.proofId = await this._immutableProofComponent.create(
+					JsonLdHelper.toNodeObject(streamEntryModel)
+				);
+				await MetricHelper.metricIncrement(
+					this._telemetryComponent,
+					AuditableItemStreamMetricIds.ProofsCreatedEntry,
+					{ index: entity.index }
+				);
+			}
 		}
 
 		await this._streamEntryStorage.set(entity);
@@ -1174,14 +1565,13 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 
 	/**
 	 * Find a stream entry.
-	 * @param nodeIdentity The node identity.
 	 * @param streamId The stream id.
 	 * @param entryId The entry id.
 	 * @param verifyEntry Should the entry be verified.
+	 * @returns The entry entity and optional verification result, or undefined if not found.
 	 * @internal
 	 */
 	private async findEntry(
-		nodeIdentity: string,
 		streamId: string,
 		entryId: string,
 		verifyEntry?: boolean
@@ -1244,18 +1634,19 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @param conditions The conditions to filter the entries.
 	 * @param sortDirection The sort direction.
 	 * @param propertiesToReturn The properties to return.
-	 * @param pageSize The page size.
+	 * @param limit Limit the number of entities when finding.
 	 * @param cursor The cursor.
+	 * @returns The stream entries and optional next cursor.
 	 * @internal
 	 */
 	private async findEntries(
-		streamId: string,
+		streamId?: string,
 		includeDeleted?: boolean,
 		verifyEntries?: boolean,
 		conditions?: IComparator[],
 		sortDirection?: SortDirection,
 		propertiesToReturn?: (keyof AuditableItemStreamEntry)[],
-		pageSize?: number,
+		limit?: number,
 		cursor?: string
 	): Promise<{
 		entries: IAuditableItemStreamEntry[];
@@ -1263,13 +1654,15 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	}> {
 		const needToVerify = verifyEntries ?? false;
 
-		const combinedConditions: IComparator[] = [
-			{
+		const combinedConditions: IComparator[] = [];
+
+		if (Is.stringValue(streamId)) {
+			combinedConditions.push({
 				property: "streamId",
 				comparison: ComparisonOperator.Equals,
 				value: streamId
-			}
-		];
+			});
+		}
 
 		if (Is.stringValue(cursor)) {
 			const parts = cursor.split("|");
@@ -1316,7 +1709,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			],
 			propertiesToReturn,
 			cursor,
-			pageSize
+			limit
 		);
 
 		let returnCursor: string | undefined;
@@ -1349,19 +1742,22 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * Remove the verifiable storage for the stream and entries.
 	 * @param streamEntity The stream entity.
 	 * @param removeOnlyProof Should only the proof be removed.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entries have been processed.
 	 * @internal
 	 */
 	private async internalRemoveEntries(
 		streamEntity: AuditableItemStream,
-		removeOnlyProof: boolean,
-		nodeIdentity: string
+		removeOnlyProof: boolean
 	): Promise<void> {
 		if (Is.stringValue(streamEntity.proofId)) {
-			await this._immutableProofComponent.removeVerifiable(streamEntity.proofId, nodeIdentity);
+			await this._immutableProofComponent.removeNotarization(streamEntity.proofId);
 			delete streamEntity.proofId;
+
 			await this._streamStorage.set(streamEntity);
+			await MetricHelper.metricIncrement(
+				this._telemetryComponent,
+				AuditableItemStreamMetricIds.ProofsRemovedStream
+			);
 		}
 
 		const entryIds: string[] = [];
@@ -1386,8 +1782,13 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			for (const streamEntry of entriesResult.entities) {
 				entryIds.push(streamEntry.id as string);
 				if (Is.stringValue(streamEntry.proofId)) {
-					await this._immutableProofComponent.removeVerifiable(streamEntry.proofId, nodeIdentity);
+					await this._immutableProofComponent.removeNotarization(streamEntry.proofId);
 					delete streamEntry.proofId;
+
+					await MetricHelper.metricIncrement(
+						this._telemetryComponent,
+						AuditableItemStreamMetricIds.ProofsRemovedEntry
+					);
 
 					// If we are only removing the proof, we need to set the entry
 					// otherwise the entry is going to be removed later anyway.

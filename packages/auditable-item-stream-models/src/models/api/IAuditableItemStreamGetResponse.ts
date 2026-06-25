@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import type { HeaderTypes, MimeTypes } from "@twin.org/web";
-import type { IAuditableItemStream } from "../IAuditableItemStream";
+import type { IAuditableItemStream } from "../IAuditableItemStream.js";
 
 /**
  * Response to getting an auditable item stream.
@@ -12,6 +12,7 @@ export interface IAuditableItemStreamGetResponse {
 	 */
 	headers?: {
 		[HeaderTypes.ContentType]: typeof MimeTypes.Json | typeof MimeTypes.JsonLd;
+		[HeaderTypes.Link]?: string | string[];
 	};
 
 	/**

@@ -4,7 +4,7 @@ Append to an auditable item stream.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -18,7 +18,7 @@ The id of the stream to create the entry in.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 

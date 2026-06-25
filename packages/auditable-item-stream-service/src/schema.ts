@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { EntitySchemaFactory, EntitySchemaHelper } from "@twin.org/entity";
 import { nameof } from "@twin.org/nameof";
-import { AuditableItemStream } from "./entities/auditableItemStream";
-import { AuditableItemStreamEntry } from "./entities/auditableItemStreamEntry";
+import { AuditableItemStream } from "./entities/auditableItemStream.js";
+import { AuditableItemStreamEntry } from "./entities/auditableItemStreamEntry.js";
 
 /**
  * Initialize the schema for the auditable item stream entity storage connector.

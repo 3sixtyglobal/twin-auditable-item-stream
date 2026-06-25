@@ -1,27 +1,22 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IJsonLdContextDefinitionElement, IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import type { IJsonLdContextDefinitionElement } from "@twin.org/data-json-ld";
 import type { IImmutableProofVerification } from "@twin.org/immutable-proof-models";
-import type { AuditableItemStreamContexts } from "./auditableItemStreamContexts";
-import type { AuditableItemStreamTypes } from "./auditableItemStreamTypes";
+import type { AuditableItemStreamContexts } from "./auditableItemStreamContexts.js";
+import type { IAuditableItemStreamEntryBase } from "./IAuditableItemStreamEntryBase.js";
 
 /**
  * Interface describing an entry for the stream.
  */
-export interface IAuditableItemStreamEntry {
+export interface IAuditableItemStreamEntry extends IAuditableItemStreamEntryBase {
 	/**
 	 * JSON-LD Context.
 	 */
-	"@context": [
-		typeof AuditableItemStreamContexts.ContextRoot,
-		typeof AuditableItemStreamContexts.ContextRootCommon,
+	"@context"?: [
+		typeof AuditableItemStreamContexts.Context,
+		typeof AuditableItemStreamContexts.ContextCommon,
 		...IJsonLdContextDefinitionElement[]
 	];
-
-	/**
-	 * JSON-LD Type.
-	 */
-	type: typeof AuditableItemStreamTypes.StreamEntry;
 
 	/**
 	 * The id of the entry.
@@ -30,41 +25,43 @@ export interface IAuditableItemStreamEntry {
 
 	/**
 	 * The date/time of when the entry was created.
+	 * @json-ld namespace:sch
 	 */
 	dateCreated: string;
 
 	/**
 	 * The date/time of when the entry was modified.
+	 * @json-ld namespace:sch
 	 */
 	dateModified?: string;
 
 	/**
 	 * The date/time of when the entry was deleted, as we never actually remove items.
+	 * @json-ld namespace:sch
 	 */
 	dateDeleted?: string;
 
 	/**
 	 * The identity of the user which added the entry to the stream.
+	 * @json-ld namespace:twin-common
 	 */
 	userIdentity?: string;
 
 	/**
-	 * The object to associate with the entry as JSON-LD.
-	 */
-	entryObject: IJsonLdNodeObject;
-
-	/**
 	 * The index of the entry in the stream.
+	 * @json-ld type:sch:Integer
 	 */
 	index: number;
 
 	/**
 	 * The id of the immutable proof.
+	 * @json-ld type:sch:identifier
 	 */
 	proofId?: string;
 
 	/**
 	 * The verification of the entry.
+	 * @json-ld id
 	 */
 	verification?: IImmutableProofVerification;
 }

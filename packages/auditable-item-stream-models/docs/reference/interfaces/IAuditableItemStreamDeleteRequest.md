@@ -4,7 +4,7 @@ Delete an auditable item stream.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 

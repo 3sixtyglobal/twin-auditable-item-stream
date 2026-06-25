@@ -4,7 +4,7 @@ Event bus payload for stream deleted.
 
 ## Properties
 
-### id
+### id {#id}
 
 > **id**: `string`
 

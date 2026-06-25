@@ -2,7 +2,7 @@
 
 > **auditableItemStreamDeleteEntry**(`httpRequestContext`, `componentName`, `request`): `Promise`\<`INoContentResponse`\>
 
-Get the stream.
+Delete an entry from the stream.
 
 ## Parameters
 

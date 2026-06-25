@@ -2,25 +2,21 @@
 
 Interface describing an entry for the stream.
 
+## Extends
+
+- [`IAuditableItemStreamEntryBase`](IAuditableItemStreamEntryBase.md)
+
 ## Properties
 
-### @context
+### @context? {#context}
 
-> **@context**: \[`"https://schema.twindev.org/ais/"`, `"https://schema.twindev.org/common/"`, `...IJsonLdContextDefinitionElement[]`\]
+> `optional` **@context?**: \[`"https://schema.twindev.org/ais/"`, `"https://schema.twindev.org/common/"`, `...IJsonLdContextDefinitionElement[]`\]
 
 JSON-LD Context.
 
 ***
 
-### type
-
-> **type**: `"AuditableItemStreamEntry"`
-
-JSON-LD Type.
-
-***
-
-### id
+### id {#id}
 
 > **id**: `string`
 
@@ -28,7 +24,7 @@ The id of the entry.
 
 ***
 
-### dateCreated
+### dateCreated {#datecreated}
 
 > **dateCreated**: `string`
 
@@ -36,39 +32,31 @@ The date/time of when the entry was created.
 
 ***
 
-### dateModified?
+### dateModified? {#datemodified}
 
-> `optional` **dateModified**: `string`
+> `optional` **dateModified?**: `string`
 
 The date/time of when the entry was modified.
 
 ***
 
-### dateDeleted?
+### dateDeleted? {#datedeleted}
 
-> `optional` **dateDeleted**: `string`
+> `optional` **dateDeleted?**: `string`
 
 The date/time of when the entry was deleted, as we never actually remove items.
 
 ***
 
-### userIdentity?
+### userIdentity? {#useridentity}
 
-> `optional` **userIdentity**: `string`
+> `optional` **userIdentity?**: `string`
 
 The identity of the user which added the entry to the stream.
 
 ***
 
-### entryObject
-
-> **entryObject**: `IJsonLdNodeObject`
-
-The object to associate with the entry as JSON-LD.
-
-***
-
-### index
+### index {#index}
 
 > **index**: `number`
 
@@ -76,16 +64,40 @@ The index of the entry in the stream.
 
 ***
 
-### proofId?
+### proofId? {#proofid}
 
-> `optional` **proofId**: `string`
+> `optional` **proofId?**: `string`
 
 The id of the immutable proof.
 
 ***
 
-### verification?
+### verification? {#verification}
 
-> `optional` **verification**: `IImmutableProofVerification`
+> `optional` **verification?**: `IImmutableProofVerification`
 
 The verification of the entry.
+
+***
+
+### type {#type}
+
+> **type**: `"AuditableItemStreamEntry"`
+
+JSON-LD Type.
+
+#### Inherited from
+
+[`IAuditableItemStreamEntryBase`](IAuditableItemStreamEntryBase.md).[`type`](IAuditableItemStreamEntryBase.md#type)
+
+***
+
+### entryObject {#entryobject}
+
+> **entryObject**: `IJsonLdNodeObject`
+
+The object to associate with the entry as JSON-LD.
+
+#### Inherited from
+
+[`IAuditableItemStreamEntryBase`](IAuditableItemStreamEntryBase.md).[`entryObject`](IAuditableItemStreamEntryBase.md#entryobject)

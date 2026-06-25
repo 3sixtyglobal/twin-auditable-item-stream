@@ -1,5 +1,5 @@
 {
-	"openapi": "3.1.0",
+	"openapi": "3.1.1",
 	"info": {
 		"title": "TWIN - Test Endpoints",
 		"description": "REST API for TWIN - Test Endpoints.",
@@ -39,26 +39,36 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/AuditableItemStreamCreateRequest"
+								"$ref": "https://schema.twindev.org/ais/AuditableItemStreamBase"
 							},
 							"examples": {
 								"auditableItemStreamCreateRequestExample": {
 									"value": {
+										"@context": [
+											"https://schema.org",
+											"https://schema.twindev.org/ais/",
+											"https://schema.twindev.org/common/"
+										],
+										"type": "AuditableItemStream",
 										"annotationObject": {
 											"@context": "https://schema.org",
 											"@type": "Note",
 											"content": "This is a simple note"
 										},
-										"entries": [
-											{
-												"entryObject": {
-													"@context": "https://schema.org",
-													"@type": "Event",
-													"startDate": "2011-04-09T20:00:00Z",
-													"description": "A description of the event"
+										"entries": {
+											"type": "ItemList",
+											"itemListElement": [
+												{
+													"type": "AuditableItemStreamEntry",
+													"entryObject": {
+														"@context": "https://schema.org",
+														"@type": "Event",
+														"startDate": "2011-04-09T20:00:00Z",
+														"description": "A description of the event"
+													}
 												}
-											}
-										]
+											]
+										}
 									}
 								}
 							}
@@ -73,7 +83,7 @@
 								"schema": {
 									"type": "string"
 								},
-								"description": "e.g. ais:1234567890"
+								"description": "e.g. ais%3A1234567890"
 							}
 						}
 					},
@@ -88,7 +98,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -109,7 +119,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -127,7 +137,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -158,7 +168,6 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": "string",
 							"enum": [
 								"dateCreated",
 								"dateModified"
@@ -193,15 +202,12 @@
 						}
 					},
 					{
-						"name": "pageSize",
-						"description": "The maximum number of entities in a page.",
+						"name": "limit",
+						"description": "Limit the number of entities to return.",
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"number",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -242,6 +248,7 @@
 											"itemListElement": [
 												{
 													"@context": [
+														"https://schema.org",
 														"https://schema.twindev.org/ais/",
 														"https://schema.twindev.org/common/"
 													],
@@ -254,13 +261,12 @@
 														"@type": "Note",
 														"content": "This is a simple note"
 													},
-													"nodeIdentity": "tst:1234567890",
-													"userIdentity": "tst:1234567890",
+													"organizationIdentity": "did:iota:1234567890",
 													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
-													"immutableInterval": 10
+													"immutableInterval": 10,
+													"numberOfItems": 0
 												}
-											],
-											"nextItem": "1"
+											]
 										}
 									}
 								}
@@ -284,6 +290,7 @@
 											"itemListElement": [
 												{
 													"@context": [
+														"https://schema.org",
 														"https://schema.twindev.org/ais/",
 														"https://schema.twindev.org/common/"
 													],
@@ -296,13 +303,12 @@
 														"@type": "Note",
 														"content": "This is a simple note"
 													},
-													"nodeIdentity": "tst:1234567890",
-													"userIdentity": "tst:1234567890",
+													"organizationIdentity": "did:iota:1234567890",
 													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
-													"immutableInterval": 10
+													"immutableInterval": 10,
+													"numberOfItems": 0
 												}
-											],
-											"nextItem": "1"
+											]
 										}
 									}
 								}
@@ -328,7 +334,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -349,7 +355,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -367,7 +373,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -388,7 +394,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -418,15 +424,30 @@
 						"example": "ais:1234567890"
 					},
 					{
-						"name": "includeEntries",
-						"description": "Whether to include the entries, defaults to false. The entries will be limited to the first page of entries in date descending order. If you want to get more entries you can use the returned cursor with the get entries method.",
+						"name": "cursor",
+						"description": "Cursor to use for next chunk of entries.",
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
+						}
+					},
+					{
+						"name": "limit",
+						"description": "Limit the number of entries to return, only applicable if includeEntries is true.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "includeEntries",
+						"description": "Whether to include the entries, defaults to false.\nThe entries will be limited to the first page of entries in date descending order.\nIf you want to get more entries you can use the returned cursor with the get entries method.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
 						}
 					},
 					{
@@ -435,10 +456,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -447,10 +465,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -459,10 +474,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -493,6 +505,7 @@
 									"auditableItemStreamGetResponseExample": {
 										"value": {
 											"@context": [
+												"https://schema.org",
 												"https://schema.twindev.org/ais/",
 												"https://schema.twindev.org/common/"
 											],
@@ -505,29 +518,32 @@
 												"@type": "Note",
 												"content": "This is a simple note"
 											},
-											"nodeIdentity": "tst:1234567890",
-											"userIdentity": "tst:1234567890",
+											"organizationIdentity": "did:iota:1234567890",
 											"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
 											"immutableInterval": 10,
-											"entries": [
-												{
-													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
-													],
-													"type": "AuditableItemStreamEntry",
-													"id": "tst:1234567890",
-													"dateCreated": "2024-08-22T11:55:16.271Z",
-													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
-													"index": 0,
-													"entryObject": {
-														"@context": "https://schema.org",
-														"@type": "Event",
-														"startDate": "2011-04-09T20:00:00Z",
-														"description": "A description of the event"
+											"numberOfItems": 1,
+											"entries": {
+												"type": "ItemList",
+												"itemListElement": [
+													{
+														"@context": [
+															"https://schema.twindev.org/ais/",
+															"https://schema.twindev.org/common/"
+														],
+														"type": "AuditableItemStreamEntry",
+														"id": "tst:1234567890",
+														"dateCreated": "2024-08-22T11:55:16.271Z",
+														"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
+														"index": 0,
+														"entryObject": {
+															"@context": "https://schema.org",
+															"@type": "Event",
+															"startDate": "2011-04-09T20:00:00Z",
+															"description": "A description of the event"
+														}
 													}
-												}
-											]
+												]
+											}
 										}
 									}
 								}
@@ -540,6 +556,7 @@
 									"auditableItemStreamJsonLdGetResponseExample": {
 										"value": {
 											"@context": [
+												"https://schema.org",
 												"https://schema.twindev.org/ais/",
 												"https://schema.twindev.org/common/"
 											],
@@ -552,29 +569,32 @@
 												"@type": "Note",
 												"content": "This is a simple note"
 											},
-											"nodeIdentity": "tst:1234567890",
-											"userIdentity": "tst:1234567890",
+											"organizationIdentity": "did:iota:1234567890",
 											"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
 											"immutableInterval": 10,
-											"entries": [
-												{
-													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
-													],
-													"type": "AuditableItemStreamEntry",
-													"id": "tst:1234567890",
-													"dateCreated": "2024-08-22T11:55:16.271Z",
-													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
-													"index": 0,
-													"entryObject": {
-														"@context": "https://schema.org",
-														"@type": "Event",
-														"startDate": "2011-04-09T20:00:00Z",
-														"description": "A description of the event"
+											"numberOfItems": 1,
+											"entries": {
+												"type": "ItemList",
+												"itemListElement": [
+													{
+														"@context": [
+															"https://schema.twindev.org/ais/",
+															"https://schema.twindev.org/common/"
+														],
+														"type": "AuditableItemStreamEntry",
+														"id": "tst:1234567890",
+														"dateCreated": "2024-08-22T11:55:16.271Z",
+														"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
+														"index": 0,
+														"entryObject": {
+															"@context": "https://schema.org",
+															"@type": "Event",
+															"startDate": "2011-04-09T20:00:00Z",
+															"description": "A description of the event"
+														}
 													}
-												}
-											]
+												]
+											}
 										}
 									}
 								}
@@ -600,7 +620,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -621,7 +641,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -639,7 +659,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -660,7 +680,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -704,6 +724,12 @@
 							"examples": {
 								"auditableItemStreamUpdateRequestExample": {
 									"value": {
+										"@context": [
+											"https://schema.org",
+											"https://schema.twindev.org/ais/",
+											"https://schema.twindev.org/common/"
+										],
+										"type": "AuditableItemStream",
 										"annotationObject": {
 											"@context": "https://schema.org",
 											"@type": "Note",
@@ -730,7 +756,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -751,7 +777,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -769,7 +795,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -790,7 +816,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -838,7 +864,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -859,7 +885,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -877,7 +903,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -898,7 +924,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -906,7 +932,119 @@
 						}
 					}
 				}
-			},
+			}
+		},
+		"/auditable-item-stream/{id}/close": {
+			"put": {
+				"operationId": "auditableItemStreamClose",
+				"summary": "Close a stream",
+				"tags": [
+					"Auditable Item Stream"
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"description": "The id of the stream to close.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "ais:1234567890"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "The rest request ended in success with no data."
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "The resource you tried to access does not exist, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundResponse"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "NotFoundError",
+											"message": "errorMessage",
+											"properties": {
+												"notFoundId": "1"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auditable-item-stream/{id}/entries": {
 			"post": {
 				"operationId": "auditableItemStreamCreateEntry",
 				"summary": "Create a new stream entry",
@@ -962,7 +1100,7 @@
 								"schema": {
 									"type": "string"
 								},
-								"description": "e.g. ais:1234567890:01010101010"
+								"description": "e.g. ais%3A1234567890%3A01010101010"
 							}
 						}
 					},
@@ -977,7 +1115,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -998,7 +1136,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1016,7 +1154,266 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"get": {
+				"operationId": "auditableItemStreamListEntries",
+				"summary": "Get the entry objects in a stream",
+				"tags": [
+					"Auditable Item Stream"
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"description": "The id of the stream to get.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "ais:1234567890"
+					},
+					{
+						"name": "conditions",
+						"description": "The conditions to filter the stream, JSON stringified IComparator[].",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "includeDeleted",
+						"description": "Whether to include deleted entries, defaults to false.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "verifyEntries",
+						"description": "Should the entries be verified, defaults to false.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "order",
+						"description": "Retrieve the entries in ascending/descending time order, defaults to Ascending.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SortDirection"
+						}
+					},
+					{
+						"name": "limit",
+						"description": "How many entries to return.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "cursor",
+						"description": "Cursor to use for next chunk of data.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "accept",
+						"in": "header",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Response to getting an auditable item stream entries.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+								},
+								"examples": {
+									"auditableItemStreamListEntriesResponseExample": {
+										"value": {
+											"@context": [
+												"https://schema.org",
+												"https://schema.twindev.org/ais/",
+												"https://schema.twindev.org/common/"
+											],
+											"type": [
+												"ItemList",
+												"AuditableItemStreamEntryList"
+											],
+											"itemListElement": [
+												{
+													"@context": [
+														"https://schema.twindev.org/ais/",
+														"https://schema.twindev.org/common/"
+													],
+													"type": "AuditableItemStreamEntry",
+													"id": "tst:1234567890",
+													"dateCreated": "2024-08-22T11:55:16.271Z",
+													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
+													"index": 0,
+													"entryObject": {
+														"@context": "https://schema.org",
+														"@type": "Event",
+														"startDate": "2011-04-09T20:00:00Z",
+														"description": "A description of the event"
+													}
+												}
+											]
+										}
+									}
+								}
+							},
+							"application/ld+json": {
+								"schema": {
+									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+								},
+								"examples": {
+									"auditableItemStreamJsonLdListEntriesResponseExample": {
+										"value": {
+											"@context": [
+												"https://schema.org",
+												"https://schema.twindev.org/ais/",
+												"https://schema.twindev.org/common/"
+											],
+											"type": [
+												"ItemList",
+												"AuditableItemStreamEntryList"
+											],
+											"itemListElement": [
+												{
+													"@context": [
+														"https://schema.twindev.org/ais/",
+														"https://schema.twindev.org/common/"
+													],
+													"type": "AuditableItemStreamEntry",
+													"id": "tst:1234567890",
+													"dateCreated": "2024-08-22T11:55:16.271Z",
+													"proofId": "0101010101010101010101010101010101010101010101010101010101010101",
+													"index": 0,
+													"entryObject": {
+														"@context": "https://schema.org",
+														"@type": "Event",
+														"startDate": "2011-04-09T20:00:00Z",
+														"description": "A description of the event"
+													}
+												}
+											]
+										}
+									}
+								}
+							}
+						},
+						"headers": {
+							"content-type": {
+								"schema": {
+									"type": "string"
+								},
+								"description": "e.g. application/ld+json"
+							}
+						}
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "The resource you tried to access does not exist, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundResponse"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "NotFoundError",
+											"message": "errorMessage",
+											"properties": {
+												"notFoundId": "1"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1026,7 +1423,7 @@
 				}
 			}
 		},
-		"/auditable-item-stream/{id}/{entryId}": {
+		"/auditable-item-stream/{id}/entries/{entryId}": {
 			"get": {
 				"operationId": "auditableItemStreamGetEntry",
 				"summary": "Get a stream entry",
@@ -1036,7 +1433,7 @@
 				"parameters": [
 					{
 						"name": "id",
-						"description": "The id of the stream to update the get in.",
+						"description": "The id of the stream to get the entry from.",
 						"in": "path",
 						"required": true,
 						"schema": {
@@ -1047,7 +1444,7 @@
 					},
 					{
 						"name": "entryId",
-						"description": "The id of the entry to update.",
+						"description": "The id of the entry to get.",
 						"in": "path",
 						"required": true,
 						"schema": {
@@ -1062,10 +1459,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -1160,7 +1554,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -1181,7 +1575,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1199,7 +1593,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -1220,7 +1614,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1279,7 +1673,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -1300,7 +1694,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1318,7 +1712,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -1339,7 +1733,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1420,7 +1814,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -1441,7 +1835,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1459,7 +1853,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -1480,7 +1874,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1490,10 +1884,10 @@
 				}
 			}
 		},
-		"/auditable-item-stream/{id}/{entryId}/object": {
+		"/auditable-item-stream/{id}/entries/{entryId}/object": {
 			"get": {
 				"operationId": "auditableItemStreamGetEntryObject",
-				"summary": "Get a stream entry",
+				"summary": "Get a stream entry object",
 				"tags": [
 					"Auditable Item Stream"
 				],
@@ -1558,7 +1952,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -1579,7 +1973,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1597,7 +1991,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -1618,7 +2012,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1628,25 +2022,14 @@
 				}
 			}
 		},
-		"/auditable-item-stream/{id}/entries": {
+		"/auditable-item-stream/entries": {
 			"get": {
-				"operationId": "auditableItemStreamListEntries",
-				"summary": "Get the entry objects in a stream",
+				"operationId": "auditableItemStreamListEntriesNoStream",
+				"summary": "Get the entry objects for all streams",
 				"tags": [
 					"Auditable Item Stream"
 				],
 				"parameters": [
-					{
-						"name": "id",
-						"description": "The id of the stream to get.",
-						"in": "path",
-						"required": true,
-						"schema": {
-							"type": "string"
-						},
-						"style": "simple",
-						"example": "ais:1234567890"
-					},
 					{
 						"name": "conditions",
 						"description": "The conditions to filter the stream, JSON stringified IComparator[].",
@@ -1662,10 +2045,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -1674,10 +2054,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -1690,15 +2067,12 @@
 						}
 					},
 					{
-						"name": "pageSize",
+						"name": "limit",
 						"description": "How many entries to return.",
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -1734,7 +2108,7 @@
 									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
-									"auditableItemStreamListEntriesResponseExample": {
+									"auditableItemStreamListEntriesNoStreamResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
@@ -1763,8 +2137,7 @@
 														"description": "A description of the event"
 													}
 												}
-											],
-											"nextItem": "1"
+											]
 										}
 									}
 								}
@@ -1774,7 +2147,7 @@
 									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
-									"auditableItemStreamJsonLdListEntriesResponseExample": {
+									"auditableItemStreamJsonLdListEntriesNoStreamResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
@@ -1803,8 +2176,7 @@
 														"description": "A description of the event"
 													}
 												}
-											],
-											"nextItem": "1"
+											]
 										}
 									}
 								}
@@ -1830,7 +2202,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -1851,7 +2223,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1869,7 +2241,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -1890,7 +2262,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -1934,10 +2306,7 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"boolean",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -1950,15 +2319,12 @@
 						}
 					},
 					{
-						"name": "pageSize",
+						"name": "limit",
 						"description": "How many entries to return.",
 						"in": "query",
 						"required": false,
 						"schema": {
-							"type": [
-								"number",
-								"string"
-							]
+							"type": "string"
 						}
 					},
 					{
@@ -2012,8 +2378,7 @@
 													"startDate": "2011-04-09T20:00:00Z",
 													"description": "A description of the event"
 												}
-											],
-											"nextItem": "1"
+											]
 										}
 									}
 								}
@@ -2031,7 +2396,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "GeneralError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"foo": "bar"
 											}
@@ -2052,7 +2417,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "UnauthorizedError",
-											"message": "component.error"
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -2070,7 +2435,7 @@
 									"exampleResponse": {
 										"value": {
 											"name": "NotFoundError",
-											"message": "component.error",
+											"message": "errorMessage",
 											"properties": {
 												"notFoundId": "1"
 											}
@@ -2091,7 +2456,300 @@
 									"exampleResponse": {
 										"value": {
 											"name": "InternalServerError",
-											"message": "component.error"
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auditable-item-stream/entries/objects": {
+			"get": {
+				"operationId": "auditableItemStreamListEntryObjectsNoStream",
+				"summary": "Get the entry objects for all streams",
+				"tags": [
+					"Auditable Item Stream"
+				],
+				"parameters": [
+					{
+						"name": "conditions",
+						"description": "The conditions to filter the stream, JSON stringified IComparator[].",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "includeDeleted",
+						"description": "Whether to include deleted entries, defaults to false.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "order",
+						"description": "Retrieve the entries in ascending/descending time order, defaults to Ascending.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"$ref": "#/components/schemas/SortDirection"
+						}
+					},
+					{
+						"name": "limit",
+						"description": "How many entries to return.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "cursor",
+						"description": "Cursor to use for next chunk of data.",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"type": "string"
+						}
+					},
+					{
+						"name": "accept",
+						"in": "header",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Response to getting an auditable item stream entries objects.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryObjectList"
+								},
+								"examples": {
+									"auditableItemStreamListEntryObjectsNoStreamResponseExample": {
+										"value": {
+											"@context": [
+												"https://schema.org",
+												"https://schema.twindev.org/ais/",
+												"https://schema.twindev.org/common/"
+											],
+											"type": [
+												"ItemList",
+												"AuditableItemStreamEntryObjectList"
+											],
+											"itemListElement": [
+												{
+													"@context": "https://schema.org",
+													"@type": "Event",
+													"startDate": "2011-04-09T20:00:00Z",
+													"description": "A description of the event"
+												}
+											]
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "The resource you tried to access does not exist, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundResponse"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "NotFoundError",
+											"message": "errorMessage",
+											"properties": {
+												"notFoundId": "1"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/auditable-item-stream/{id}/proof": {
+			"delete": {
+				"operationId": "auditableItemStreamRemoveProof",
+				"summary": "Remove the proof from a stream",
+				"tags": [
+					"Auditable Item Stream"
+				],
+				"parameters": [
+					{
+						"name": "id",
+						"description": "The id of the stream to remove the proof from.",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string"
+						},
+						"style": "simple",
+						"example": "ais:1234567890"
+					}
+				],
+				"security": [
+					{
+						"jwtBearerAuthScheme": []
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "The rest request ended in success with no data."
+					},
+					"400": {
+						"description": "The server cannot process the request, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "GeneralError",
+											"message": "errorMessage",
+											"properties": {
+												"foo": "bar"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "You are not authorized to use the API or no credentials were supplied, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "UnauthorizedError",
+											"message": "errorMessage"
+										}
+									}
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "The resource you tried to access does not exist, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NotFoundResponse"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "NotFoundError",
+											"message": "errorMessage",
+											"properties": {
+												"notFoundId": "1"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "The server has encountered a situation it does not know how to handle, see the content for more details.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/Error"
+								},
+								"examples": {
+									"exampleResponse": {
+										"value": {
+											"name": "InternalServerError",
+											"message": "errorMessage"
 										}
 									}
 								}
@@ -2114,39 +2772,6 @@
 				"required": [
 					"entryObject"
 				],
-				"additionalProperties": false,
-				"description": "The data to be used in the stream."
-			},
-			"AuditableItemStreamCreateRequest": {
-				"type": "object",
-				"properties": {
-					"annotationObject": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
-					},
-					"entries": {
-						"type": "array",
-						"description": "The entries for the stream.",
-						"prefixItems": [
-							{
-								"type": "object",
-								"properties": {
-									"entryObject": {
-										"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
-									}
-								},
-								"required": [
-									"entryObject"
-								],
-								"additionalProperties": false
-							}
-						]
-					},
-					"immutableInterval": {
-						"type": "number",
-						"description": "After how many entries do we add immutable checks, defaults to service configured value. A value of 0 will disable immutable checks, 1 will be every item, or any other integer for an interval."
-					}
-				},
-				"additionalProperties": false,
 				"description": "The data to be used in the stream."
 			},
 			"AuditableItemStreamUpdateEntryRequest": {
@@ -2159,20 +2784,46 @@
 				"required": [
 					"entryObject"
 				],
-				"additionalProperties": false,
 				"description": "The data to be used in the entry."
 			},
 			"AuditableItemStreamUpdateRequest": {
+				"description": "The data to be used in the stream, entries should be updated separately.",
 				"type": "object",
 				"properties": {
+					"@context": {
+						"type": "array",
+						"prefixItems": [
+							{
+								"const": "https://schema.org"
+							},
+							{
+								"const": "https://schema.twindev.org/ais/"
+							},
+							{
+								"const": "https://schema.twindev.org/common/"
+							}
+						],
+						"items": {
+							"$ref": "https://schema.twindev.org/json-ld/JsonLdContextDefinitionElement"
+						},
+						"minItems": 3,
+						"description": "JSON-LD Context."
+					},
+					"type": {
+						"const": "AuditableItemStream",
+						"description": "JSON-LD Type."
+					},
 					"annotationObject": {
 						"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
 					}
 				},
-				"additionalProperties": false,
-				"description": "The data to be used in the stream."
+				"required": [
+					"@context",
+					"type"
+				]
 			},
 			"Error": {
+				"description": "Model to describe serialized error.",
 				"type": "object",
 				"properties": {
 					"name": {
@@ -2181,7 +2832,7 @@
 					},
 					"message": {
 						"type": "string",
-						"description": "The message for the error."
+						"description": "The message for the error as an i18n key."
 					},
 					"source": {
 						"type": "string",
@@ -2196,70 +2847,42 @@
 						"type": "string",
 						"description": "The stack trace for the error."
 					},
-					"inner": {
+					"cause": {
 						"$ref": "#/components/schemas/Error"
 					}
 				},
 				"required": [
 					"name",
 					"message"
-				],
-				"additionalProperties": false,
-				"description": "Model to describe serialized error."
+				]
 			},
 			"NotFoundResponse": {
 				"type": "object",
-				"additionalProperties": false,
 				"properties": {
 					"notFoundId": {
 						"type": "string",
 						"description": "The id if the item that was not found."
-					},
-					"name": {
-						"type": "string",
-						"description": "The name for the error."
-					},
-					"message": {
-						"type": "string",
-						"description": "The message for the error."
-					},
-					"source": {
-						"type": "string",
-						"description": "The source of the error."
-					},
-					"properties": {
-						"type": "object",
-						"additionalProperties": {},
-						"description": "Any additional information for the error."
-					},
-					"stack": {
-						"type": "string",
-						"description": "The stack trace for the error."
-					},
-					"inner": {
-						"$ref": "#/components/schemas/Error"
 					}
 				},
-				"required": [
-					"message",
-					"name"
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Error"
+					}
 				],
 				"description": "The body which contains the error."
 			},
 			"SortDirection": {
+				"description": "The sort directions.",
 				"anyOf": [
 					{
-						"type": "string",
 						"const": "asc",
 						"description": "Ascending."
 					},
 					{
-						"type": "string",
 						"const": "desc",
 						"description": "Descending."
 					}
-				],
-				"description": "The sort directions."
+				]
 			}
 		},
 		"securitySchemes": {

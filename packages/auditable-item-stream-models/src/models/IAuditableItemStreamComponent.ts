@@ -3,11 +3,12 @@
 import type { IComponent } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
 import type { IComparator, SortDirection } from "@twin.org/entity";
-import type { IAuditableItemStream } from "./IAuditableItemStream";
-import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry";
-import type { IAuditableItemStreamEntryList } from "./IAuditableItemStreamEntryList";
-import type { IAuditableItemStreamEntryObjectList } from "./IAuditableItemStreamEntryObjectList";
-import type { IAuditableItemStreamList } from "./IAuditableItemStreamList";
+import type { IAuditableItemStream } from "./IAuditableItemStream.js";
+import type { IAuditableItemStreamBase } from "./IAuditableItemStreamBase.js";
+import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry.js";
+import type { IAuditableItemStreamEntryList } from "./IAuditableItemStreamEntryList.js";
+import type { IAuditableItemStreamEntryObjectList } from "./IAuditableItemStreamEntryObjectList.js";
+import type { IAuditableItemStreamList } from "./IAuditableItemStreamList.js";
 
 /**
  * Interface describing an auditable item stream component.
@@ -16,50 +17,31 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	/**
 	 * Create a new stream.
 	 * @param stream The stream to create.
-	 * @param stream.annotationObject The object for the stream as JSON-LD.
-	 * @param stream.entries Entries to store in the stream.
-	 * @param options Options for creating the stream.
-	 * @param options.immutableInterval After how many entries do we add immutable checks, defaults to service configured value.
-	 * A value of 0 will disable immutable checks, 1 will be every item, or any other integer for an interval.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns The id of the new stream item.
+	 * @returns The id of the created stream, if not provided.
 	 */
-	create(
-		stream: {
-			annotationObject?: IJsonLdNodeObject;
-			entries?: {
-				entryObject: IJsonLdNodeObject;
-			}[];
-		},
-		options?: {
-			immutableInterval?: number;
-		},
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<string>;
+	create(stream: IAuditableItemStreamBase): Promise<string>;
 
 	/**
 	 * Update a stream.
-	 * @param stream The stream to update.
-	 * @param stream.id The id of the stream to update.
-	 * @param stream.annotationObject The object for the stream as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @param stream The stream to update, does not update entries.
+	 * @returns A promise that resolves when the stream has been updated.
 	 */
 	update(
-		stream: {
-			id: string;
-			annotationObject?: IJsonLdNodeObject;
-		},
-		userIdentity?: string,
-		nodeIdentity?: string
+		stream: Pick<IAuditableItemStream, "@context" | "type" | "id" | "annotationObject">
 	): Promise<void>;
+
+	/**
+	 * Close a stream.
+	 * @param id The id of the stream to close.
+	 * @returns A promise that resolves when the stream has been closed.
+	 */
+	close(id: string): Promise<void>;
 
 	/**
 	 * Get a stream header without the entries.
 	 * @param id The id of the stream to get.
+	 * @param cursor Cursor to use for next chunk of entries.
+	 * @param limit Limit the number of entries to return, only applicable if includeEntries is true.
 	 * @param options Additional options for the get operation.
 	 * @param options.includeEntries Whether to include the entries, defaults to false.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
@@ -70,22 +52,25 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 */
 	get(
 		id: string,
+		cursor?: string,
+		limit?: number,
 		options?: {
 			includeEntries?: boolean;
 			includeDeleted?: boolean;
 			verifyStream?: boolean;
 			verifyEntries?: boolean;
 		}
-	): Promise<IAuditableItemStream>;
+	): Promise<{
+		stream: IAuditableItemStream;
+		cursor?: string;
+	}>;
 
 	/**
 	 * Delete the stream.
 	 * @param id The id of the stream to remove.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the stream has been removed.
 	 */
-	remove(id: string, userIdentity?: string, nodeIdentity?: string): Promise<void>;
+	remove(id: string): Promise<void>;
 
 	/**
 	 * Query all the streams, will not return entries.
@@ -93,8 +78,8 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 * @param orderBy The order for the results, defaults to created.
 	 * @param orderByDirection The direction for the order, defaults to descending.
 	 * @param properties The properties to return, if not provided defaults to id, dateCreated, dateModified and annotationObject.
-	 * @param cursor The cursor to request the next page of entities.
-	 * @param pageSize The maximum number of entities in a page.
+	 * @param cursor The cursor to request the next chunk of entities.
+	 * @param limit Limit the number of entities to return.
 	 * @returns The entities, which can be partial if a limited keys list was provided.
 	 */
 	query(
@@ -103,23 +88,19 @@ export interface IAuditableItemStreamComponent extends IComponent {
 		orderByDirection?: SortDirection,
 		properties?: (keyof IAuditableItemStream)[],
 		cursor?: string,
-		pageSize?: number
-	): Promise<IAuditableItemStreamList>;
+		limit?: number
+	): Promise<{
+		entries: IAuditableItemStreamList;
+		cursor?: string;
+	}>;
 
 	/**
 	 * Create an entry in the stream.
 	 * @param streamId The id of the stream to create the entry in.
 	 * @param entryObject The object for the stream as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
 	 * @returns The id of the created entry, if not provided.
 	 */
-	createEntry(
-		streamId: string,
-		entryObject: IJsonLdNodeObject,
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<string>;
+	createEntry(streamId: string, entryObject: IJsonLdNodeObject): Promise<string>;
 
 	/**
 	 * Get the entry from the stream.
@@ -152,87 +133,77 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 * @param streamId The id of the stream to update.
 	 * @param entryId The id of the entry to update.
 	 * @param entryObject The object for the entry as JSON-LD.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been updated.
 	 */
-	updateEntry(
-		streamId: string,
-		entryId: string,
-		entryObject: IJsonLdNodeObject,
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<void>;
+	updateEntry(streamId: string, entryId: string, entryObject: IJsonLdNodeObject): Promise<void>;
 
 	/**
 	 * Remove from the stream.
 	 * @param streamId The id of the stream to remove from.
 	 * @param entryId The id of the entry to delete.
-	 * @param userIdentity The identity to create the auditable item stream operation with.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * @returns A promise that resolves when the entry has been removed.
 	 */
-	removeEntry(
-		streamId: string,
-		entryId: string,
-		userIdentity?: string,
-		nodeIdentity?: string
-	): Promise<void>;
+	removeEntry(streamId: string, entryId: string): Promise<void>;
 
 	/**
 	 * Get the entries for the stream.
-	 * @param streamId The id of the stream to get.
+	 * @param streamId The id of the stream to get, if undefined returns all matching entries.
 	 * @param options Additional options for the get operation.
 	 * @param options.conditions The conditions to filter the stream.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
 	 * @param options.verifyEntries Should the entries be verified, defaults to false.
-	 * @param options.pageSize How many entries to return.
+	 * @param options.limit How many entries to return.
 	 * @param options.cursor Cursor to use for next chunk of data.
 	 * @param options.order Retrieve the entries in ascending/descending time order, defaults to Ascending.
 	 * @returns The stream and entries if found.
 	 * @throws NotFoundError if the stream is not found.
 	 */
 	getEntries(
-		streamId: string,
+		streamId?: string,
 		options?: {
 			conditions?: IComparator[];
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
-			pageSize?: number;
+			limit?: number;
 			cursor?: string;
 			order?: SortDirection;
 		}
-	): Promise<IAuditableItemStreamEntryList>;
+	): Promise<{
+		entries: IAuditableItemStreamEntryList;
+		cursor?: string;
+	}>;
 
 	/**
 	 * Get the entry objects for the stream.
-	 * @param streamId The id of the stream to get.
+	 * @param streamId The id of the stream to get, if undefined returns all matching entries.
 	 * @param options Additional options for the get operation.
 	 * @param options.conditions The conditions to filter the stream.
 	 * @param options.includeDeleted Whether to include deleted entries, defaults to false.
-	 * @param options.pageSize How many entries to return.
+	 * @param options.limit How many entries to return.
 	 * @param options.cursor Cursor to use for next chunk of data.
 	 * @param options.order Retrieve the entries in ascending/descending time order, defaults to Ascending.
 	 * @returns The stream and entries if found.
 	 * @throws NotFoundError if the stream is not found.
 	 */
 	getEntryObjects(
-		streamId: string,
+		streamId?: string,
 		options?: {
 			conditions?: IComparator[];
 			includeDeleted?: boolean;
-			pageSize?: number;
+			limit?: number;
 			cursor?: string;
 			order?: SortDirection;
 		}
-	): Promise<IAuditableItemStreamEntryObjectList>;
+	): Promise<{
+		entries: IAuditableItemStreamEntryObjectList;
+		cursor?: string;
+	}>;
 
 	/**
-	 * Remove the verifiable storage for the stream and entries.
-	 * @param streamId The id of the stream to remove the storage from.
-	 * @param nodeIdentity The node identity to use for vault operations.
-	 * @returns Nothing.
+	 * Remove the proof for the stream and entries.
+	 * @param streamId The id of the stream to remove the proof from.
+	 * @returns A promise that resolves when the proof has been removed.
 	 * @throws NotFoundError if the vertex is not found.
 	 */
-	removeVerifiable(streamId: string, nodeIdentity?: string): Promise<void>;
+	removeProof(streamId: string): Promise<void>;
 }

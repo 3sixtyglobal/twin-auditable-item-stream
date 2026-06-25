@@ -4,9 +4,9 @@ Options for the auditable item stream service constructor.
 
 ## Properties
 
-### immutableProofComponentType?
+### immutableProofComponentType? {#immutableproofcomponenttype}
 
-> `optional` **immutableProofComponentType**: `string`
+> `optional` **immutableProofComponentType?**: `string`
 
 The immutable proof component type.
 
@@ -18,9 +18,9 @@ immutable-proof
 
 ***
 
-### streamEntityStorageType?
+### streamEntityStorageType? {#streamentitystoragetype}
 
-> `optional` **streamEntityStorageType**: `string`
+> `optional` **streamEntityStorageType?**: `string`
 
 The entity storage for stream.
 
@@ -32,9 +32,9 @@ auditable-item-stream
 
 ***
 
-### streamEntryEntityStorageType?
+### streamEntryEntityStorageType? {#streamentryentitystoragetype}
 
-> `optional` **streamEntryEntityStorageType**: `string`
+> `optional` **streamEntryEntityStorageType?**: `string`
 
 The entity storage for stream entries.
 
@@ -46,16 +46,24 @@ auditable-item-stream-entry
 
 ***
 
-### eventBusComponentType?
+### eventBusComponentType? {#eventbuscomponenttype}
 
-> `optional` **eventBusComponentType**: `string`
+> `optional` **eventBusComponentType?**: `string`
 
 The event bus component type, defaults to no event bus.
 
 ***
 
-### config?
+### telemetryComponentType? {#telemetrycomponenttype}
 
-> `optional` **config**: [`IAuditableItemStreamServiceConfig`](IAuditableItemStreamServiceConfig.md)
+> `optional` **telemetryComponentType?**: `string`
+
+The component type for the optional telemetry component used for event metrics.
+
+***
+
+### config? {#config}
+
+> `optional` **config?**: [`IAuditableItemStreamServiceConfig`](IAuditableItemStreamServiceConfig.md)
 
 The configuration for the connector.

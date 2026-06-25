@@ -18,12 +18,12 @@ export interface IAuditableItemStreamGetEntryRequest {
 	 */
 	pathParams: {
 		/**
-		 * The id of the stream to update the get in.
+		 * The id of the stream to get the entry from.
 		 */
 		id: string;
 
 		/**
-		 * The id of the entry to update.
+		 * The id of the entry to get.
 		 */
 		entryId: string;
 	};
@@ -35,6 +35,6 @@ export interface IAuditableItemStreamGetEntryRequest {
 		/**
 		 * Verify the entry, defaults to false.
 		 */
-		verifyEntry?: boolean | string;
+		verifyEntry?: string;
 	};
 }

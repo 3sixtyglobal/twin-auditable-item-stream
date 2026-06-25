@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import type { AuditableItemStreamModes } from "@twin.org/auditable-item-stream-models";
 import { type IJsonLdNodeObject, JsonLdTypes } from "@twin.org/data-json-ld";
 import { entity, property, SortDirection } from "@twin.org/entity";
 
@@ -32,16 +33,16 @@ export class AuditableItemStream {
 	public dateModified?: string;
 
 	/**
-	 * The identity of the node which controls the stream.
+	 * The identity of the organization which controls the stream.
 	 */
 	@property({ type: "string" })
-	public nodeIdentity!: string;
+	public organizationIdentity!: string;
 
 	/**
 	 * The identity of the user which created the stream.
 	 */
-	@property({ type: "string" })
-	public userIdentity!: string;
+	@property({ type: "string", optional: true })
+	public userIdentity?: string;
 
 	/**
 	 * Object to associate with the stream as JSON-LD.
@@ -50,16 +51,28 @@ export class AuditableItemStream {
 	public annotationObject?: IJsonLdNodeObject;
 
 	/**
-	 * The counter for the entry index.
+	 * The number of items in the stream.
 	 */
 	@property({ type: "integer" })
-	public indexCounter!: number;
+	public numberOfItems!: number;
 
 	/**
 	 * After how many entries do we add immutable checks.
 	 */
 	@property({ type: "integer" })
 	public immutableInterval!: number;
+
+	/**
+	 * Is the stream closed for entry updates.
+	 */
+	@property({ type: "boolean", optional: true })
+	public closed?: boolean;
+
+	/**
+	 * The operation mode for the stream.
+	 */
+	@property({ type: "string", optional: true })
+	public mode?: AuditableItemStreamModes;
 
 	/**
 	 * The immutable proof id.

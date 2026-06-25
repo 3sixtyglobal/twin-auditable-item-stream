@@ -14,7 +14,7 @@ Class describing the auditable item stream.
 
 ## Properties
 
-### id
+### id {#id}
 
 > **id**: `string`
 
@@ -22,7 +22,7 @@ The id of the stream.
 
 ***
 
-### dateCreated
+### dateCreated {#datecreated}
 
 > **dateCreated**: `string`
 
@@ -30,47 +30,47 @@ The date/time of when the stream was created.
 
 ***
 
-### dateModified?
+### dateModified? {#datemodified}
 
-> `optional` **dateModified**: `string`
+> `optional` **dateModified?**: `string`
 
 The date/time of when the stream was modified.
 
 ***
 
-### nodeIdentity
+### organizationIdentity {#organizationidentity}
 
-> **nodeIdentity**: `string`
+> **organizationIdentity**: `string`
 
-The identity of the node which controls the stream.
+The identity of the organization which controls the stream.
 
 ***
 
-### userIdentity
+### userIdentity? {#useridentity}
 
-> **userIdentity**: `string`
+> `optional` **userIdentity?**: `string`
 
 The identity of the user which created the stream.
 
 ***
 
-### annotationObject?
+### annotationObject? {#annotationobject}
 
-> `optional` **annotationObject**: `IJsonLdNodeObject`
+> `optional` **annotationObject?**: `IJsonLdNodeObject`
 
 Object to associate with the stream as JSON-LD.
 
 ***
 
-### indexCounter
+### numberOfItems {#numberofitems}
 
-> **indexCounter**: `number`
+> **numberOfItems**: `number`
 
-The counter for the entry index.
+The number of items in the stream.
 
 ***
 
-### immutableInterval
+### immutableInterval {#immutableinterval}
 
 > **immutableInterval**: `number`
 
@@ -78,8 +78,24 @@ After how many entries do we add immutable checks.
 
 ***
 
-### proofId?
+### closed? {#closed}
 
-> `optional` **proofId**: `string`
+> `optional` **closed?**: `boolean`
+
+Is the stream closed for entry updates.
+
+***
+
+### mode? {#mode}
+
+> `optional` **mode?**: `AuditableItemStreamModes`
+
+The operation mode for the stream.
+
+***
+
+### proofId? {#proofid}
+
+> `optional` **proofId?**: `string`
 
 The immutable proof id.

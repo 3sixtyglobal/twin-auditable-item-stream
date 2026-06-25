@@ -46,8 +46,8 @@ export class AuditableItemStreamEntry {
 	/**
 	 * The identity of the user that added the entry.
 	 */
-	@property({ type: "string" })
-	public userIdentity!: string;
+	@property({ type: "string", optional: true })
+	public userIdentity?: string;
 
 	/**
 	 * Object to associate with the entry as JSON-LD.

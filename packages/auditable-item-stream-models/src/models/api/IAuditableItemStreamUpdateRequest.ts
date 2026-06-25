@@ -1,6 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
+import type { IAuditableItemStream } from "../IAuditableItemStream.js";
 
 /**
  * Update an auditable item stream.
@@ -17,12 +17,7 @@ export interface IAuditableItemStreamUpdateRequest {
 	};
 
 	/**
-	 * The data to be used in the stream.
+	 * The data to be used in the stream, entries should be updated separately.
 	 */
-	body: {
-		/**
-		 * The object to be used in the stream as JSON-LD.
-		 */
-		annotationObject?: IJsonLdNodeObject;
-	};
+	body: Pick<IAuditableItemStream, "@context" | "type" | "annotationObject">;
 }

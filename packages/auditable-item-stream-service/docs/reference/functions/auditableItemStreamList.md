@@ -2,7 +2,7 @@
 
 > **auditableItemStreamList**(`httpRequestContext`, `componentName`, `request`): `Promise`\<`IAuditableItemStreamListResponse`\>
 
-Query the stream.
+List all streams.
 
 ## Parameters
 

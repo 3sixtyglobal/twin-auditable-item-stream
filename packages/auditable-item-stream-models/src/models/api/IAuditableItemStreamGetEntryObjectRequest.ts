@@ -18,12 +18,12 @@ export interface IAuditableItemStreamGetEntryObjectRequest {
 	 */
 	pathParams: {
 		/**
-		 * The id of the stream to update the get in.
+		 * The id of the stream to get the entry object from.
 		 */
 		id: string;
 
 		/**
-		 * The id of the entry to update.
+		 * The id of the entry to get.
 		 */
 		entryId: string;
 	};

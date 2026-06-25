@@ -1,10 +1,10 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-export * from "./auditableItemStreamRoutes";
-export * from "./auditableItemStreamService";
-export * from "./entities/auditableItemStream";
-export * from "./entities/auditableItemStreamEntry";
-export * from "./models/IAuditableItemStreamServiceConfig";
-export * from "./models/IAuditableItemStreamServiceConstructorOptions";
-export * from "./restEntryPoints";
-export * from "./schema";
+export * from "./auditableItemStreamRoutes.js";
+export * from "./auditableItemStreamService.js";
+export * from "./entities/auditableItemStream.js";
+export * from "./entities/auditableItemStreamEntry.js";
+export * from "./models/IAuditableItemStreamServiceConfig.js";
+export * from "./models/IAuditableItemStreamServiceConstructorOptions.js";
+export * from "./restEntryPoints.js";
+export * from "./schema.js";

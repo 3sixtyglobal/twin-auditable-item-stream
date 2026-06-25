@@ -4,8 +4,11 @@ import type { IRestRouteEntryPoint } from "@twin.org/api-models";
 import {
 	generateRestRoutesAuditableItemStream,
 	tagsAuditableItemStream
-} from "./auditableItemStreamRoutes";
+} from "./auditableItemStreamRoutes.js";
 
+/**
+ * The REST route entry points for the auditable item stream service.
+ */
 export const restEntryPoints: IRestRouteEntryPoint[] = [
 	{
 		name: "auditable-item-stream",

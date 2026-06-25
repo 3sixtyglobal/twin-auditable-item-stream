@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0.
 import type { IJsonLdContextDefinitionElement } from "@twin.org/data-json-ld";
 import type { SchemaOrgContexts, SchemaOrgTypes } from "@twin.org/standards-schema-org";
-import type { AuditableItemStreamContexts } from "./auditableItemStreamContexts";
-import type { AuditableItemStreamTypes } from "./auditableItemStreamTypes";
-import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry";
+import type { AuditableItemStreamContexts } from "./auditableItemStreamContexts.js";
+import type { AuditableItemStreamTypes } from "./auditableItemStreamTypes.js";
+import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry.js";
 
 /**
  * Interface describing an auditable item stream entries list.
@@ -14,9 +14,9 @@ export interface IAuditableItemStreamEntryList {
 	 * JSON-LD Context.
 	 */
 	"@context": [
-		typeof SchemaOrgContexts.ContextRoot,
-		typeof AuditableItemStreamContexts.ContextRoot,
-		typeof AuditableItemStreamContexts.ContextRootCommon,
+		typeof SchemaOrgContexts.Context,
+		typeof AuditableItemStreamContexts.Context,
+		typeof AuditableItemStreamContexts.ContextCommon,
 		...IJsonLdContextDefinitionElement[]
 	];
 
@@ -27,11 +27,7 @@ export interface IAuditableItemStreamEntryList {
 
 	/**
 	 * The entries in the stream.
+	 * @json-ld namespace:sch
 	 */
 	[SchemaOrgTypes.ItemListElement]: IAuditableItemStreamEntry[];
-
-	/**
-	 * Cursor for the next chunk of entries.
-	 */
-	[SchemaOrgTypes.NextItem]?: string;
 }

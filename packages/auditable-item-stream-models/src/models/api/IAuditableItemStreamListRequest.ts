@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0.
 import type { SortDirection } from "@twin.org/entity";
 import type { HeaderTypes, MimeTypes } from "@twin.org/web";
-import type { IAuditableItemStream } from "../IAuditableItemStream";
+import type { IAuditableItemStream } from "../IAuditableItemStream.js";
 
 /**
- * Get the a list of the streams.
+ * Get a list of the streams.
  */
 export interface IAuditableItemStreamListRequest {
 	/**
@@ -45,8 +45,8 @@ export interface IAuditableItemStreamListRequest {
 		cursor?: string;
 
 		/**
-		 * The maximum number of entities in a page.
+		 * Limit the number of entities to return.
 		 */
-		pageSize?: number | string;
+		limit?: string;
 	};
 }

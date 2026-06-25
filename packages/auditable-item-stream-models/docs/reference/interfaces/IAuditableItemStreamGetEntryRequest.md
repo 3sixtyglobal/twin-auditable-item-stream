@@ -4,9 +4,9 @@ Get an entry in the auditable item stream.
 
 ## Properties
 
-### headers?
+### headers? {#headers}
 
-> `optional` **headers**: `object`
+> `optional` **headers?**: `object`
 
 The headers which can be used to determine the response data type.
 
@@ -16,7 +16,7 @@ The headers which can be used to determine the response data type.
 
 ***
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -26,24 +26,24 @@ The path parameters.
 
 > **id**: `string`
 
-The id of the stream to update the get in.
+The id of the stream to get the entry from.
 
 #### entryId
 
 > **entryId**: `string`
 
-The id of the entry to update.
+The id of the entry to get.
 
 ***
 
-### query?
+### query? {#query}
 
-> `optional` **query**: `object`
+> `optional` **query?**: `object`
 
 The query parameters.
 
 #### verifyEntry?
 
-> `optional` **verifyEntry**: `string` \| `boolean`
+> `optional` **verifyEntry?**: `string`
 
 Verify the entry, defaults to false.

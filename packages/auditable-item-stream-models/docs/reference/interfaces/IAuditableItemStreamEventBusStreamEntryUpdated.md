@@ -4,7 +4,7 @@ Event bus payload for stream entry updated.
 
 ## Properties
 
-### id
+### id {#id}
 
 > **id**: `string`
 
@@ -12,7 +12,7 @@ The id of the stream containing the entry.
 
 ***
 
-### entryId
+### entryId {#entryid}
 
 > **entryId**: `string`
 

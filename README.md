@@ -1,12 +1,14 @@
 # TWIN Auditable Item Stream
 
-This mono-repository contains the packages to use with auditable item stream in TWIN applications.
+This repository provides a complete auditable item stream stack for defining contracts, running stream operations, and consuming stream APIs from client applications. The packages are designed to work together so stream data stays consistent from model definition through to service execution and client integration.
+
+The overall aim is to make audit-friendly event and record timelines straightforward to build and maintain, with reusable building blocks that can be composed into larger systems without duplicating core stream logic.
 
 ## Packages
 
-- [auditable-item-stream-models](packages/auditable-item-stream-models/README.md) - Models which define the structure of the auditable item stream contracts and connectors.
-- [auditable-item-stream-service](packages/auditable-item-stream-service/README.md) - Auditable item stream contract implementation and REST endpoint definitions.
-- [auditable-item-stream-rest-client](packages/auditable-item-stream-rest-client/README.md) - Auditable item stream contract implementation which can connect to REST endpoints.
+- [auditable-item-stream-models](packages/auditable-item-stream-models/README.md) - Shared data contracts, schemas, and topic constants for auditable item stream components.
+- [auditable-item-stream-service](packages/auditable-item-stream-service/README.md) - Service implementation and REST route generation for managing auditable streams and entries.
+- [auditable-item-stream-rest-client](packages/auditable-item-stream-rest-client/README.md) - HTTP client for interacting with auditable stream service endpoints.
 
 ## Contributing
 

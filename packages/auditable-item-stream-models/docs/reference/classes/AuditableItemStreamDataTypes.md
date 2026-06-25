@@ -14,7 +14,7 @@ Handle all the data types for auditable item stream.
 
 ## Methods
 
-### registerTypes()
+### registerTypes() {#registertypes}
 
 > `static` **registerTypes**(): `void`
 

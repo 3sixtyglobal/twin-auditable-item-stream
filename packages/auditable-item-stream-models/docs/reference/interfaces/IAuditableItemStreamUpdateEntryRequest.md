@@ -4,7 +4,7 @@ Update an entry in the auditable item stream.
 
 ## Properties
 
-### pathParams
+### pathParams {#pathparams}
 
 > **pathParams**: `object`
 
@@ -24,7 +24,7 @@ The id of the entry to update.
 
 ***
 
-### body
+### body {#body}
 
 > **body**: `object`
 

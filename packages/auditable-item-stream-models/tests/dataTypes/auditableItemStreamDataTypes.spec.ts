@@ -3,9 +3,10 @@
 import type { IValidationFailure } from "@twin.org/core";
 import { DataTypeHelper } from "@twin.org/data-core";
 import { JsonLdDataTypes } from "@twin.org/data-json-ld";
-import { AuditableItemStreamDataTypes } from "../../src/dataTypes/auditableItemStreamDataTypes";
-import { AuditableItemStreamContexts } from "../../src/models/auditableItemStreamContexts";
-import { AuditableItemStreamTypes } from "../../src/models/auditableItemStreamTypes";
+import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
+import { AuditableItemStreamDataTypes } from "../../src/dataTypes/auditableItemStreamDataTypes.js";
+import { AuditableItemStreamContexts } from "../../src/models/auditableItemStreamContexts.js";
+import { AuditableItemStreamTypes } from "../../src/models/auditableItemStreamTypes.js";
 
 describe("AuditableItemStreamDataTypes", () => {
 	beforeAll(async () => {
@@ -17,17 +18,16 @@ describe("AuditableItemStreamDataTypes", () => {
 		const validationFailures: IValidationFailure[] = [];
 		const isValid = await DataTypeHelper.validate(
 			"",
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.Stream}`,
+			`${AuditableItemStreamContexts.Namespace}${AuditableItemStreamTypes.Stream}`,
 			{
 				id: "foo",
 				dateCreated: new Date().toISOString(),
 				immutableInterval: 10,
-				nodeIdentity: "node",
-				userIdentity: "user"
+				organizationIdentity: "org"
 			},
 			validationFailures
 		);
-		expect(validationFailures.length).toEqual(1);
+		expect(validationFailures.length).toEqual(2);
 		expect(isValid).toEqual(false);
 	});
 
@@ -35,19 +35,20 @@ describe("AuditableItemStreamDataTypes", () => {
 		const validationFailures: IValidationFailure[] = [];
 		const isValid = await DataTypeHelper.validate(
 			"",
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.Stream}`,
+			`${AuditableItemStreamContexts.Namespace}${AuditableItemStreamTypes.Stream}`,
 			{
 				"@context": [
-					AuditableItemStreamContexts.ContextRoot,
-					AuditableItemStreamContexts.ContextRootCommon
+					SchemaOrgContexts.Context,
+					AuditableItemStreamContexts.Namespace,
+					AuditableItemStreamContexts.NamespaceCommon
 				],
 				type: AuditableItemStreamTypes.Stream,
 				id: "foo",
 				dateCreated: new Date().toISOString(),
 				immutableInterval: 10,
-				nodeIdentity: "node",
-				userIdentity: "user",
-				proofId: "1111"
+				organizationIdentity: "org",
+				proofId: "1111",
+				numberOfItems: 0
 			},
 			validationFailures
 		);

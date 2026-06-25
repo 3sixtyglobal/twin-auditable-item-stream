@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import type { IContextIds } from "@twin.org/context";
 
 /**
  * Context for the auditable item stream service.
@@ -11,14 +12,9 @@ export interface IAuditableItemStreamServiceContext {
 	now: string;
 
 	/**
-	 * The identity of the user.
+	 * The context ids for the operation.
 	 */
-	userIdentity: string;
-
-	/**
-	 * The identity of the node.
-	 */
-	nodeIdentity: string;
+	contextIds?: IContextIds;
 
 	/**
 	 * The index counter.
@@ -29,4 +25,9 @@ export interface IAuditableItemStreamServiceContext {
 	 * The immutable check interval.
 	 */
 	immutableInterval: number;
+
+	/**
+	 * The identity of the organization which controls the stream.
+	 */
+	organizationIdentity: string;
 }

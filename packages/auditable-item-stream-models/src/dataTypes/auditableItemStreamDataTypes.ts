@@ -1,13 +1,15 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { DataTypeHandlerFactory, type IJsonSchema } from "@twin.org/data-core";
-import { AuditableItemStreamContexts } from "../models/auditableItemStreamContexts";
-import { AuditableItemStreamTypes } from "../models/auditableItemStreamTypes";
-import AuditableItemStreamSchema from "../schemas/AuditableItemStream.json";
-import AuditableItemStreamEntrySchema from "../schemas/AuditableItemStreamEntry.json";
-import AuditableItemStreamEntryListSchema from "../schemas/AuditableItemStreamEntryList.json";
-import AuditableItemStreamEntryObjectListSchema from "../schemas/AuditableItemStreamEntryObjectList.json";
-import AuditableItemStreamListSchema from "../schemas/AuditableItemStreamList.json";
+import { DataTypeHelper } from "@twin.org/data-core";
+import { AuditableItemStreamContexts } from "../models/auditableItemStreamContexts.js";
+import { AuditableItemStreamTypes } from "../models/auditableItemStreamTypes.js";
+import AuditableItemStreamSchema from "../schemas/AuditableItemStream.json" with { type: "json" };
+import AuditableItemStreamBaseSchema from "../schemas/AuditableItemStreamBase.json" with { type: "json" };
+import AuditableItemStreamEntrySchema from "../schemas/AuditableItemStreamEntry.json" with { type: "json" };
+import AuditableItemStreamEntryBaseSchema from "../schemas/AuditableItemStreamEntryBase.json" with { type: "json" };
+import AuditableItemStreamEntryListSchema from "../schemas/AuditableItemStreamEntryList.json" with { type: "json" };
+import AuditableItemStreamEntryObjectListSchema from "../schemas/AuditableItemStreamEntryObjectList.json" with { type: "json" };
+import AuditableItemStreamListSchema from "../schemas/AuditableItemStreamList.json" with { type: "json" };
 
 /**
  * Handle all the data types for auditable item stream.
@@ -17,51 +19,41 @@ export class AuditableItemStreamDataTypes {
 	 * Register all the data types.
 	 */
 	public static registerTypes(): void {
-		DataTypeHandlerFactory.register(
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.Stream}`,
-			() => ({
-				context: AuditableItemStreamContexts.ContextRoot,
+		const types = [
+			{
 				type: AuditableItemStreamTypes.Stream,
-				defaultValue: {},
-				jsonSchema: async () => AuditableItemStreamSchema as IJsonSchema
-			})
-		);
-		DataTypeHandlerFactory.register(
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.StreamList}`,
-			() => ({
-				context: AuditableItemStreamContexts.ContextRoot,
+				schema: AuditableItemStreamSchema
+			},
+			{
 				type: AuditableItemStreamTypes.StreamList,
-				defaultValue: {},
-				jsonSchema: async () => AuditableItemStreamListSchema as IJsonSchema
-			})
-		);
-		DataTypeHandlerFactory.register(
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.StreamEntry}`,
-			() => ({
-				context: AuditableItemStreamContexts.ContextRoot,
+				schema: AuditableItemStreamListSchema
+			},
+			{
 				type: AuditableItemStreamTypes.StreamEntry,
-				defaultValue: {},
-				jsonSchema: async () => AuditableItemStreamEntrySchema as IJsonSchema
-			})
-		);
-		DataTypeHandlerFactory.register(
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.StreamEntryList}`,
-			() => ({
-				context: AuditableItemStreamContexts.ContextRoot,
+				schema: AuditableItemStreamEntrySchema
+			},
+			{
 				type: AuditableItemStreamTypes.StreamEntryList,
-				defaultValue: {},
-				jsonSchema: async () => AuditableItemStreamEntryListSchema as IJsonSchema
-			})
-		);
-
-		DataTypeHandlerFactory.register(
-			`${AuditableItemStreamContexts.ContextRoot}${AuditableItemStreamTypes.StreamEntryObjectList}`,
-			() => ({
-				context: AuditableItemStreamContexts.ContextRoot,
+				schema: AuditableItemStreamEntryListSchema
+			},
+			{
 				type: AuditableItemStreamTypes.StreamEntryObjectList,
-				defaultValue: {},
-				jsonSchema: async () => AuditableItemStreamEntryObjectListSchema as IJsonSchema
-			})
+				schema: AuditableItemStreamEntryObjectListSchema
+			},
+			{
+				type: "AuditableItemStreamBase",
+				schema: AuditableItemStreamBaseSchema
+			},
+			{
+				type: "AuditableItemStreamEntryBase",
+				schema: AuditableItemStreamEntryBaseSchema
+			}
+		];
+
+		DataTypeHelper.registerTypes(
+			AuditableItemStreamContexts.Namespace,
+			AuditableItemStreamContexts.JsonLdContext,
+			types.map(t => ({ type: t.type, schema: t.schema }))
 		);
 	}
 }
