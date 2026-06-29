@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.1-next.1...auditable-item-stream-models-v0.9.1-next.2) (2026-06-29)
+
+
+### Features
+
+* enhanced rest testing ([#101](https://github.com/iotaledger/twin-auditable-item-stream/issues/101)) ([3bccb47](https://github.com/iotaledger/twin-auditable-item-stream/commit/3bccb479295dd3d8a92a728f8fc2116791c71d62))
+
 ## [0.9.1-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.1-next.0...auditable-item-stream-models-v0.9.1-next.1) (2026-06-26)
 
 
