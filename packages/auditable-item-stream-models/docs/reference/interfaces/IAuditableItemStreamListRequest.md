@@ -26,7 +26,7 @@ The query parameters.
 
 > `optional` **conditions?**: `string`
 
-The conditions to filter the streams, JSON stringified IComparator[].
+The conditions to filter the streams, JSON stringified `EntityCondition<IAuditableItemStream>`.
 
 #### orderBy?
 
