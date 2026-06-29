@@ -20,7 +20,7 @@ export interface IAuditableItemStreamListRequest {
 	 */
 	query?: {
 		/**
-		 * The conditions to filter the streams, JSON stringified IComparator[].
+		 * The conditions to filter the streams, JSON stringified `EntityCondition<IAuditableItemStream>`.
 		 */
 		conditions?: string;
 

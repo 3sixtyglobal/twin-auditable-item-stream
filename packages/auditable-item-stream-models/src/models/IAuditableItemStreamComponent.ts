@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import type { IComponent } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import type { IComparator, SortDirection } from "@twin.org/entity";
+import type { EntityCondition, SortDirection } from "@twin.org/entity";
 import type { IAuditableItemStream } from "./IAuditableItemStream.js";
 import type { IAuditableItemStreamBase } from "./IAuditableItemStreamBase.js";
 import type { IAuditableItemStreamEntry } from "./IAuditableItemStreamEntry.js";
@@ -83,7 +83,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	 * @returns The entities, which can be partial if a limited keys list was provided.
 	 */
 	query(
-		conditions?: IComparator[],
+		conditions?: EntityCondition<IAuditableItemStream>,
 		orderBy?: keyof Pick<IAuditableItemStream, "dateCreated" | "dateModified">,
 		orderByDirection?: SortDirection,
 		properties?: (keyof IAuditableItemStream)[],
@@ -161,7 +161,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	getEntries(
 		streamId?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStream>;
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
 			limit?: number;
@@ -188,7 +188,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	getEntryObjects(
 		streamId?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			limit?: number;
 			cursor?: string;
