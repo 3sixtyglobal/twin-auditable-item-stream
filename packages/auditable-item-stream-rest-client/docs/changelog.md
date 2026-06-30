@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.1-next.3](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.2...auditable-item-stream-rest-client-v0.9.1-next.3) (2026-06-30)
+
+
+### Features
+
+* rest enhancements ([99d7f21](https://github.com/iotaledger/twin-auditable-item-stream/commit/99d7f2116fb1aab871d98ee51458876c5328620b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.1-next.2 to 0.9.1-next.3
+
 ## [0.9.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.1...auditable-item-stream-rest-client-v0.9.1-next.2) (2026-06-29)
 
 
