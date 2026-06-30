@@ -88,7 +88,7 @@ export class AuditableItemStreamRestClient
 			}
 		);
 
-		return HttpHeaderHelper.extractId(response.headers);
+		return HttpHeaderHelper.extractId(response.headers, `${this.getPathPrefix()}/:id`);
 	}
 
 	/**
@@ -291,7 +291,10 @@ export class AuditableItemStreamRestClient
 			}
 		);
 
-		return HttpHeaderHelper.extractId(response.headers);
+		return HttpHeaderHelper.extractId(
+			response.headers,
+			`${this.getPathPrefix()}/:streamId/entries/:id`
+		);
 	}
 
 	/**

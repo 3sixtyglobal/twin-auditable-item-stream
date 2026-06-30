@@ -4,6 +4,7 @@ import {
 	HttpContextIdKeys,
 	HttpHeaderHelper,
 	HttpParameterHelper,
+	HttpUrlHelper,
 	type ICreatedResponse,
 	type IHttpRequestContext,
 	type INoContentResponse,
@@ -76,7 +77,7 @@ export function generateRestRoutesAuditableItemStream(
 		method: "POST",
 		path: `${baseRouteName}/`,
 		handler: async (httpRequestContext, request) =>
-			auditableItemStreamCreate(httpRequestContext, componentName, request),
+			auditableItemStreamCreate(httpRequestContext, componentName, request, baseRouteName),
 		requestType: {
 			type: nameof<IAuditableItemStreamCreateRequest>(),
 			examples: [
@@ -493,7 +494,7 @@ export function generateRestRoutesAuditableItemStream(
 		method: "POST",
 		path: `${baseRouteName}/:id/entries`,
 		handler: async (httpRequestContext, request) =>
-			auditableItemStreamCreateEntry(httpRequestContext, componentName, request),
+			auditableItemStreamCreateEntry(httpRequestContext, componentName, request, baseRouteName),
 		requestType: {
 			type: nameof<IAuditableItemStreamCreateEntryRequest>(),
 			examples: [
@@ -1123,12 +1124,14 @@ export function generateRestRoutesAuditableItemStream(
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
+ * @param baseRouteName The base route name for the API.
  * @returns The response object with additional http response properties.
  */
 export async function auditableItemStreamCreate(
 	httpRequestContext: IHttpRequestContext,
 	componentName: string,
-	request: IAuditableItemStreamCreateRequest
+	request: IAuditableItemStreamCreateRequest,
+	baseRouteName: string
 ): Promise<ICreatedResponse> {
 	Guards.object<IAuditableItemStreamCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IAuditableItemStreamCreateRequest["body"]>(
@@ -1140,8 +1143,15 @@ export async function auditableItemStreamCreate(
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const id = await component.create(request.body);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	const publicOrigin = contextIds?.[HttpContextIdKeys.PublicOrigin];
+
 	const headers: IHttpHeaders = {};
-	HttpHeaderHelper.buildId(headers, id);
+	HttpHeaderHelper.buildId(
+		headers,
+		id,
+		HttpUrlHelper.combineOriginPath(publicOrigin, `${baseRouteName}/:id`)
+	);
 
 	return {
 		statusCode: HttpStatusCode.created,
@@ -1341,12 +1351,14 @@ export async function auditableItemStreamList(
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
+ * @param baseRouteName The base route name for the API.
  * @returns The response object with additional http response properties.
  */
 export async function auditableItemStreamCreateEntry(
 	httpRequestContext: IHttpRequestContext,
 	componentName: string,
-	request: IAuditableItemStreamCreateEntryRequest
+	request: IAuditableItemStreamCreateEntryRequest,
+	baseRouteName: string
 ): Promise<ICreatedResponse> {
 	Guards.object<IAuditableItemStreamCreateEntryRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IAuditableItemStreamCreateEntryRequest["pathParams"]>(
@@ -1365,8 +1377,15 @@ export async function auditableItemStreamCreateEntry(
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const id = await component.createEntry(request.pathParams.id, request.body.entryObject);
 
+	const contextIds = await ContextIdStore.getContextIds();
+	const publicOrigin = contextIds?.[HttpContextIdKeys.PublicOrigin];
+
 	const headers: IHttpHeaders = {};
-	HttpHeaderHelper.buildId(headers, id);
+	HttpHeaderHelper.buildId(
+		headers,
+		id,
+		HttpUrlHelper.combineOriginPath(publicOrigin, `${baseRouteName}/:streamId/entries/:id`)
+	);
 
 	return {
 		statusCode: HttpStatusCode.created,

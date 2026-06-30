@@ -30,6 +30,7 @@ const PREFIX = "auditable-item-stream";
 const STREAM_ID = "urn:ais:stream001";
 const ENTRY_ID = "entry001";
 
+const LOCATION = `${ENDPOINT}/${PREFIX}/${STREAM_ID}`;
 const ENTRY_LOCATION = `${ENDPOINT}/${PREFIX}/${STREAM_ID}/entries/${ENTRY_ID}`;
 
 const TEST_STREAM_BASE: IAuditableItemStreamBase = {
@@ -123,7 +124,7 @@ describe("AuditableItemStreamRestClient", () => {
 
 	describe("create", () => {
 		test("sends POST to /{prefix}", async () => {
-			fetchMock.mockResolvedValueOnce(createdResponse(STREAM_ID));
+			fetchMock.mockResolvedValueOnce(createdResponse(LOCATION));
 
 			await client.create(TEST_STREAM_BASE);
 
@@ -133,7 +134,7 @@ describe("AuditableItemStreamRestClient", () => {
 		});
 
 		test("sends the stream as the request body", async () => {
-			fetchMock.mockResolvedValueOnce(createdResponse(STREAM_ID));
+			fetchMock.mockResolvedValueOnce(createdResponse(LOCATION));
 
 			await client.create(TEST_STREAM_BASE);
 
@@ -143,7 +144,7 @@ describe("AuditableItemStreamRestClient", () => {
 		});
 
 		test("returns the Location header value as the new stream id", async () => {
-			fetchMock.mockResolvedValueOnce(createdResponse(STREAM_ID));
+			fetchMock.mockResolvedValueOnce(createdResponse(LOCATION));
 
 			const id = await client.create(TEST_STREAM_BASE);
 
@@ -435,7 +436,7 @@ describe("AuditableItemStreamRestClient", () => {
 
 			const id = await client.createEntry(STREAM_ID, TEST_ENTRY_OBJECT);
 
-			expect(id).toBe(ENTRY_LOCATION);
+			expect(id).toBe(ENTRY_ID);
 		});
 	});
 
