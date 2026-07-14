@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1-next.4](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.1-next.3...auditable-item-stream-models-v0.9.1-next.4) (2026-07-14)
+
+
+### Bug Fixes
+
+* close unterminated backtick in EntityCondition JSDoc ([#106](https://github.com/iotaledger/twin-auditable-item-stream/issues/106)) ([0e50c0d](https://github.com/iotaledger/twin-auditable-item-stream/commit/0e50c0d07976bae2088e75fbb664574f7f40df38))
+
 ## [0.9.1-next.3](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.1-next.2...auditable-item-stream-models-v0.9.1-next.3) (2026-06-30)
 
 
