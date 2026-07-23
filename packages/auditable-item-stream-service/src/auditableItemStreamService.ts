@@ -562,7 +562,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				streamModel["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			const result = await JsonLdProcessor.compact(streamModel, streamModel["@context"]);
+			const result = await JsonLdProcessor.compact(streamModel, streamModel["@context"], {
+				compactArrays: false
+			});
 			return {
 				stream: result,
 				cursor: returnCursor
@@ -686,7 +688,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				)
 			};
 
-			const result = await JsonLdProcessor.compact(list, list["@context"]);
+			const result = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result,
 				cursor: results.cursor
@@ -862,7 +866,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				entry.verification = result.verification;
 			}
 
-			const result2 = await JsonLdProcessor.compact(entry, entry["@context"]);
+			const result2 = await JsonLdProcessor.compact(entry, entry["@context"], {
+				compactArrays: false
+			});
 			return result2;
 		} catch (error) {
 			throw new GeneralError(
@@ -1252,7 +1258,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				list["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result2,
 				cursor: result.cursor
@@ -1342,7 +1350,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				[SchemaOrgTypes.ItemListElement]: result.entries.map(m => m.entryObject)
 			};
 
-			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result2,
 				cursor: result.cursor
