@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import {
 	HttpContextIdKeys,
+	HttpHeaderHelper,
 	HttpParameterHelper,
 	HttpUrlHelper,
 	type ICreatedResponse,
@@ -14,10 +15,8 @@ import {
 import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamTypes,
-	type IAuditableItemStreamListEntriesNoStreamRequest,
-	type IAuditableItemStreamListEntryObjectsNoStreamRequest,
-	type IAuditableItemStreamComponent,
 	type IAuditableItemStreamCloseRequest,
+	type IAuditableItemStreamComponent,
 	type IAuditableItemStreamCreateEntryRequest,
 	type IAuditableItemStreamCreateRequest,
 	type IAuditableItemStreamDeleteEntryRequest,
@@ -28,8 +27,10 @@ import {
 	type IAuditableItemStreamGetEntryResponse,
 	type IAuditableItemStreamGetRequest,
 	type IAuditableItemStreamGetResponse,
+	type IAuditableItemStreamListEntriesNoStreamRequest,
 	type IAuditableItemStreamListEntriesRequest,
 	type IAuditableItemStreamListEntriesResponse,
+	type IAuditableItemStreamListEntryObjectsNoStreamRequest,
 	type IAuditableItemStreamListEntryObjectsRequest,
 	type IAuditableItemStreamListEntryObjectsResponse,
 	type IAuditableItemStreamListRequest,
@@ -39,10 +40,10 @@ import {
 	type IAuditableItemStreamUpdateRequest
 } from "@twin.org/auditable-item-stream-models";
 import { ContextIdStore } from "@twin.org/context";
-import { Coerce, ComponentFactory, Guards, Is } from "@twin.org/core";
+import { Coerce, ComponentFactory, Guards } from "@twin.org/core";
 import { nameof } from "@twin.org/nameof";
 import { SchemaOrgContexts, SchemaOrgTypes } from "@twin.org/standards-schema-org";
-import { HeaderHelper, HeaderTypes, HttpStatusCode, MimeTypes } from "@twin.org/web";
+import { HeaderTypes, HttpStatusCode, type IHttpHeaders, MimeTypes } from "@twin.org/web";
 
 /**
  * The source identifier used when communicating errors from these routes.
@@ -76,7 +77,7 @@ export function generateRestRoutesAuditableItemStream(
 		method: "POST",
 		path: `${baseRouteName}/`,
 		handler: async (httpRequestContext, request) =>
-			auditableItemStreamCreate(httpRequestContext, componentName, request),
+			auditableItemStreamCreate(httpRequestContext, componentName, request, baseRouteName),
 		requestType: {
 			type: nameof<IAuditableItemStreamCreateRequest>(),
 			examples: [
@@ -493,7 +494,7 @@ export function generateRestRoutesAuditableItemStream(
 		method: "POST",
 		path: `${baseRouteName}/:id/entries`,
 		handler: async (httpRequestContext, request) =>
-			auditableItemStreamCreateEntry(httpRequestContext, componentName, request),
+			auditableItemStreamCreateEntry(httpRequestContext, componentName, request, baseRouteName),
 		requestType: {
 			type: nameof<IAuditableItemStreamCreateEntryRequest>(),
 			examples: [
@@ -1123,12 +1124,14 @@ export function generateRestRoutesAuditableItemStream(
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
+ * @param baseRouteName The base route name for the API.
  * @returns The response object with additional http response properties.
  */
 export async function auditableItemStreamCreate(
 	httpRequestContext: IHttpRequestContext,
 	componentName: string,
-	request: IAuditableItemStreamCreateRequest
+	request: IAuditableItemStreamCreateRequest,
+	baseRouteName: string
 ): Promise<ICreatedResponse> {
 	Guards.object<IAuditableItemStreamCreateRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IAuditableItemStreamCreateRequest["body"]>(
@@ -1139,11 +1142,20 @@ export async function auditableItemStreamCreate(
 
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const id = await component.create(request.body);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	const publicOrigin = contextIds?.[HttpContextIdKeys.PublicOrigin];
+
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildId(
+		headers,
+		id,
+		HttpUrlHelper.combineOriginPath(publicOrigin, `${baseRouteName}/:id`)
+	);
+
 	return {
 		statusCode: HttpStatusCode.created,
-		headers: {
-			[HeaderTypes.Location]: id
-		}
+		headers
 	};
 }
 
@@ -1180,22 +1192,16 @@ export async function auditableItemStreamGet(
 		}
 	);
 
-	const headers: IAuditableItemStreamListResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,
@@ -1323,22 +1329,16 @@ export async function auditableItemStreamList(
 		Coerce.integer(request.query?.limit)
 	);
 
-	const headers: IAuditableItemStreamListResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,
@@ -1351,12 +1351,14 @@ export async function auditableItemStreamList(
  * @param httpRequestContext The request context for the API.
  * @param componentName The name of the component to use in the routes.
  * @param request The request.
+ * @param baseRouteName The base route name for the API.
  * @returns The response object with additional http response properties.
  */
 export async function auditableItemStreamCreateEntry(
 	httpRequestContext: IHttpRequestContext,
 	componentName: string,
-	request: IAuditableItemStreamCreateEntryRequest
+	request: IAuditableItemStreamCreateEntryRequest,
+	baseRouteName: string
 ): Promise<ICreatedResponse> {
 	Guards.object<IAuditableItemStreamCreateEntryRequest>(ROUTES_SOURCE, nameof(request), request);
 	Guards.object<IAuditableItemStreamCreateEntryRequest["pathParams"]>(
@@ -1374,11 +1376,20 @@ export async function auditableItemStreamCreateEntry(
 
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const id = await component.createEntry(request.pathParams.id, request.body.entryObject);
+
+	const contextIds = await ContextIdStore.getContextIds();
+	const publicOrigin = contextIds?.[HttpContextIdKeys.PublicOrigin];
+
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildId(
+		headers,
+		id,
+		HttpUrlHelper.combineOriginPath(publicOrigin, `${baseRouteName}/:streamId/entries/:id`)
+	);
+
 	return {
 		statusCode: HttpStatusCode.created,
-		headers: {
-			[HeaderTypes.Location]: id
-		}
+		headers
 	};
 }
 
@@ -1475,13 +1486,11 @@ export async function auditableItemStreamGetEntry(
 		verifyEntry: Coerce.boolean(request.query?.verifyEntry)
 	});
 
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
+
 	return {
-		headers: {
-			[HeaderTypes.ContentType]:
-				request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd
-					? MimeTypes.JsonLd
-					: MimeTypes.Json
-		},
+		headers,
 		body: result
 	};
 }
@@ -1510,13 +1519,11 @@ export async function auditableItemStreamGetEntryObject(
 	const component = ComponentFactory.get<IAuditableItemStreamComponent>(componentName);
 	const result = await component.getEntryObject(request.pathParams.id, request.pathParams.entryId);
 
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
+
 	return {
-		headers: {
-			[HeaderTypes.ContentType]:
-				request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd
-					? MimeTypes.JsonLd
-					: MimeTypes.Json
-		},
+		headers,
 		body: result
 	};
 }
@@ -1552,22 +1559,16 @@ export async function auditableItemStreamListEntries(
 		cursor: request.query?.cursor
 	});
 
-	const headers: IAuditableItemStreamListEntriesResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,
@@ -1604,22 +1605,16 @@ export async function auditableItemStreamListEntriesNoStream(
 		cursor: request.query?.cursor
 	});
 
-	const headers: IAuditableItemStreamListEntriesResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,
@@ -1661,22 +1656,16 @@ export async function auditableItemStreamListEntryObjects(
 		cursor: request.query?.cursor
 	});
 
-	const headers: IAuditableItemStreamListEntryObjectsResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,
@@ -1712,22 +1701,16 @@ export async function auditableItemStreamListEntryObjectsNoStream(
 		cursor: request.query?.cursor
 	});
 
-	const headers: IAuditableItemStreamListEntryObjectsResponse["headers"] = {
-		[HeaderTypes.ContentType]:
-			request.headers?.[HeaderTypes.Accept] === MimeTypes.JsonLd ? MimeTypes.JsonLd : MimeTypes.Json
-	};
+	const headers: IHttpHeaders = {};
+	HttpHeaderHelper.buildJsonContentType(headers, request.headers);
 
-	if (Is.stringValue(result.cursor)) {
-		const contextIds = await ContextIdStore.getContextIds();
-		headers[HeaderTypes.Link] = HeaderHelper.createLinkHeader(
-			HttpUrlHelper.replaceOrigin(
-				httpRequestContext.serverRequest.url,
-				contextIds?.[HttpContextIdKeys.PublicOrigin]
-			),
-			{ cursor: result.cursor },
-			"next"
-		);
-	}
+	const contextIds = await ContextIdStore.getContextIds();
+	HttpHeaderHelper.buildCursor(
+		headers,
+		httpRequestContext.serverRequest.url,
+		contextIds?.[HttpContextIdKeys.PublicOrigin],
+		result.cursor
+	);
 
 	return {
 		headers,

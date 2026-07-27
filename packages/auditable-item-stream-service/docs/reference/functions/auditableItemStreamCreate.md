@@ -1,6 +1,6 @@
 # Function: auditableItemStreamCreate()
 
-> **auditableItemStreamCreate**(`httpRequestContext`, `componentName`, `request`): `Promise`\<`ICreatedResponse`\>
+> **auditableItemStreamCreate**(`httpRequestContext`, `componentName`, `request`, `baseRouteName`): `Promise`\<`ICreatedResponse`\>
 
 Create the stream.
 
@@ -23,6 +23,12 @@ The name of the component to use in the routes.
 `IAuditableItemStreamCreateRequest`
 
 The request.
+
+### baseRouteName
+
+`string`
+
+The base route name for the API.
 
 ## Returns
 

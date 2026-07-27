@@ -172,7 +172,7 @@ Query all the streams, will not return entries.
 
 ##### conditions?
 
-`IComparator`[]
+`EntityCondition`\<[`IAuditableItemStream`](IAuditableItemStream.md)\>
 
 Conditions to use in the query.
 
@@ -398,7 +398,7 @@ Additional options for the get operation.
 
 ###### conditions?
 
-`IComparator`[]
+`EntityCondition`\<[`IAuditableItemStream`](IAuditableItemStream.md)\>
 
 The conditions to filter the stream.
 
@@ -464,7 +464,7 @@ Additional options for the get operation.
 
 ###### conditions?
 
-`IComparator`[]
+`EntityCondition`\<[`IAuditableItemStreamEntry`](IAuditableItemStreamEntry.md)\>
 
 The conditions to filter the stream.
 

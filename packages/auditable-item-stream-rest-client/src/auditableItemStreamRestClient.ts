@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0.
 import { BaseRestClient } from "@twin.org/api-core";
 import {
+	HttpHeaderHelper,
 	HttpParameterHelper,
 	type IBaseRestClientConfig,
 	type ICreatedResponse,
@@ -40,9 +41,9 @@ import type {
 } from "@twin.org/auditable-item-stream-models";
 import { Coerce, Guards, Is } from "@twin.org/core";
 import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import type { IComparator, SortDirection } from "@twin.org/entity";
+import type { EntityCondition, SortDirection } from "@twin.org/entity";
 import { nameof } from "@twin.org/nameof";
-import { HeaderHelper, HeaderTypes, MimeTypes } from "@twin.org/web";
+import { HeaderTypes, HttpMethod, MimeTypes } from "@twin.org/web";
 
 /**
  * Client for performing auditable item stream through to REST endpoints.
@@ -81,13 +82,13 @@ export class AuditableItemStreamRestClient
 		Guards.object(AuditableItemStreamRestClient.CLASS_NAME, nameof(stream), stream);
 		const response = await this.fetch<IAuditableItemStreamCreateRequest, ICreatedResponse>(
 			"/",
-			"POST",
+			HttpMethod.POST,
 			{
 				body: stream
 			}
 		);
 
-		return response.headers[HeaderTypes.Location];
+		return HttpHeaderHelper.extractId(response.headers, `${this.getPathPrefix()}/:id`);
 	}
 
 	/**
@@ -122,7 +123,7 @@ export class AuditableItemStreamRestClient
 		const response = await this.fetch<
 			IAuditableItemStreamGetRequest,
 			IAuditableItemStreamGetResponse
-		>("/:id", "GET", {
+		>("/:id", HttpMethod.GET, {
 			headers: {
 				[HeaderTypes.Accept]: MimeTypes.JsonLd
 			},
@@ -141,8 +142,7 @@ export class AuditableItemStreamRestClient
 
 		return {
 			stream: response.body,
-			cursor: HeaderHelper.extractLinkHeaderRelation(response.headers?.[HeaderTypes.Link], "next")
-				?.urlQueryParams?.cursor
+			cursor: HttpHeaderHelper.extractCursor(response.headers)
 		};
 	}
 
@@ -158,12 +158,16 @@ export class AuditableItemStreamRestClient
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(stream.id), stream.id);
 
 		const { id, ...rest } = stream;
-		await this.fetch<IAuditableItemStreamUpdateRequest, INoContentResponse>("/:id", "PUT", {
-			pathParams: {
-				id
-			},
-			body: rest
-		});
+		await this.fetch<IAuditableItemStreamUpdateRequest, INoContentResponse>(
+			"/:id",
+			HttpMethod.PUT,
+			{
+				pathParams: {
+					id
+				},
+				body: rest
+			}
+		);
 	}
 
 	/**
@@ -174,11 +178,15 @@ export class AuditableItemStreamRestClient
 	public async close(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(id), id);
 
-		await this.fetch<IAuditableItemStreamCloseRequest, INoContentResponse>("/:id/close", "PUT", {
-			pathParams: {
-				id
+		await this.fetch<IAuditableItemStreamCloseRequest, INoContentResponse>(
+			"/:id/close",
+			HttpMethod.PUT,
+			{
+				pathParams: {
+					id
+				}
 			}
-		});
+		);
 	}
 
 	/**
@@ -191,7 +199,7 @@ export class AuditableItemStreamRestClient
 
 		await this.fetch<IAuditableItemStreamRemoveProofRequest, INoContentResponse>(
 			"/:id/proof",
-			"DELETE",
+			HttpMethod.DELETE,
 			{
 				pathParams: { id: streamId }
 			}
@@ -206,11 +214,15 @@ export class AuditableItemStreamRestClient
 	public async remove(id: string): Promise<void> {
 		Guards.stringValue(AuditableItemStreamRestClient.CLASS_NAME, nameof(id), id);
 
-		await this.fetch<IAuditableItemStreamDeleteRequest, INoContentResponse>("/:id", "DELETE", {
-			pathParams: {
-				id
+		await this.fetch<IAuditableItemStreamDeleteRequest, INoContentResponse>(
+			"/:id",
+			HttpMethod.DELETE,
+			{
+				pathParams: {
+					id
+				}
 			}
-		});
+		);
 	}
 
 	/**
@@ -224,7 +236,7 @@ export class AuditableItemStreamRestClient
 	 * @returns The entities, which can be partial if a limited keys list was provided.
 	 */
 	public async query(
-		conditions?: IComparator[],
+		conditions?: EntityCondition<IAuditableItemStream>,
 		orderBy?: keyof Pick<IAuditableItemStream, "dateCreated" | "dateModified">,
 		orderByDirection?: SortDirection,
 		properties?: (keyof IAuditableItemStream)[],
@@ -237,7 +249,7 @@ export class AuditableItemStreamRestClient
 		const response = await this.fetch<
 			IAuditableItemStreamListRequest,
 			IAuditableItemStreamListResponse
-		>("/", "GET", {
+		>("/", HttpMethod.GET, {
 			headers: {
 				[HeaderTypes.Accept]: MimeTypes.JsonLd
 			},
@@ -253,8 +265,7 @@ export class AuditableItemStreamRestClient
 
 		return {
 			entries: response.body,
-			cursor: HeaderHelper.extractLinkHeaderRelation(response.headers?.[HeaderTypes.Link], "next")
-				?.urlQueryParams?.cursor
+			cursor: HttpHeaderHelper.extractCursor(response.headers)
 		};
 	}
 
@@ -269,7 +280,7 @@ export class AuditableItemStreamRestClient
 
 		const response = await this.fetch<IAuditableItemStreamCreateEntryRequest, ICreatedResponse>(
 			"/:id/entries",
-			"POST",
+			HttpMethod.POST,
 			{
 				pathParams: {
 					id
@@ -280,7 +291,10 @@ export class AuditableItemStreamRestClient
 			}
 		);
 
-		return response.headers[HeaderTypes.Location];
+		return HttpHeaderHelper.extractId(
+			response.headers,
+			`${this.getPathPrefix()}/:streamId/entries/:id`
+		);
 	}
 
 	/**
@@ -305,7 +319,7 @@ export class AuditableItemStreamRestClient
 		const response = await this.fetch<
 			IAuditableItemStreamGetEntryRequest,
 			IAuditableItemStreamGetEntryResponse
-		>("/:id/entries/:entryId", "GET", {
+		>("/:id/entries/:entryId", HttpMethod.GET, {
 			headers: {
 				[HeaderTypes.Accept]: MimeTypes.JsonLd
 			},
@@ -335,7 +349,7 @@ export class AuditableItemStreamRestClient
 		const response = await this.fetch<
 			IAuditableItemStreamGetEntryObjectRequest,
 			IAuditableItemStreamGetEntryObjectResponse
-		>("/:id/entries/:entryId/object", "GET", {
+		>("/:id/entries/:entryId/object", HttpMethod.GET, {
 			headers: {
 				[HeaderTypes.Accept]: MimeTypes.JsonLd
 			},
@@ -365,7 +379,7 @@ export class AuditableItemStreamRestClient
 
 		await this.fetch<IAuditableItemStreamUpdateEntryRequest, INoContentResponse>(
 			"/:id/entries/:entryId",
-			"PUT",
+			HttpMethod.PUT,
 			{
 				pathParams: {
 					id,
@@ -390,7 +404,7 @@ export class AuditableItemStreamRestClient
 
 		await this.fetch<IAuditableItemStreamDeleteEntryRequest, INoContentResponse>(
 			"/:id/entries/:entryId",
-			"DELETE",
+			HttpMethod.DELETE,
 			{
 				pathParams: {
 					id,
@@ -416,7 +430,7 @@ export class AuditableItemStreamRestClient
 	public async getEntries(
 		id?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
 			limit?: number;
@@ -443,7 +457,7 @@ export class AuditableItemStreamRestClient
 			response = await this.fetch<
 				IAuditableItemStreamListEntriesRequest,
 				IAuditableItemStreamListEntriesResponse
-			>("/:id/entries", "GET", {
+			>("/:id/entries", HttpMethod.GET, {
 				headers: {
 					[HeaderTypes.Accept]: MimeTypes.JsonLd
 				},
@@ -456,7 +470,7 @@ export class AuditableItemStreamRestClient
 			response = await this.fetch<
 				IAuditableItemStreamListEntriesNoStreamRequest,
 				IAuditableItemStreamListEntriesResponse
-			>("/entries", "GET", {
+			>("/entries", HttpMethod.GET, {
 				headers: {
 					[HeaderTypes.Accept]: MimeTypes.JsonLd
 				},
@@ -466,8 +480,7 @@ export class AuditableItemStreamRestClient
 
 		return {
 			entries: response.body,
-			cursor: HeaderHelper.extractLinkHeaderRelation(response.headers?.[HeaderTypes.Link], "next")
-				?.urlQueryParams?.cursor
+			cursor: HttpHeaderHelper.extractCursor(response.headers)
 		};
 	}
 
@@ -486,7 +499,7 @@ export class AuditableItemStreamRestClient
 	public async getEntryObjects(
 		id?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			limit?: number;
 			cursor?: string;
@@ -510,7 +523,7 @@ export class AuditableItemStreamRestClient
 			response = await this.fetch<
 				IAuditableItemStreamListEntryObjectsRequest,
 				IAuditableItemStreamListEntryObjectsResponse
-			>("/:id/entries/objects", "GET", {
+			>("/:id/entries/objects", HttpMethod.GET, {
 				headers: {
 					[HeaderTypes.Accept]: MimeTypes.JsonLd
 				},
@@ -523,7 +536,7 @@ export class AuditableItemStreamRestClient
 			response = await this.fetch<
 				IAuditableItemStreamListEntryObjectsNoStreamRequest,
 				IAuditableItemStreamListEntryObjectsResponse
-			>("/entries/objects", "GET", {
+			>("/entries/objects", HttpMethod.GET, {
 				headers: {
 					[HeaderTypes.Accept]: MimeTypes.JsonLd
 				},
@@ -533,8 +546,7 @@ export class AuditableItemStreamRestClient
 
 		return {
 			entries: response.body,
-			cursor: HeaderHelper.extractLinkHeaderRelation(response.headers?.[HeaderTypes.Link], "next")
-				?.urlQueryParams?.cursor
+			cursor: HttpHeaderHelper.extractCursor(response.headers)
 		};
 	}
 }

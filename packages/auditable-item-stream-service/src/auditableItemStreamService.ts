@@ -48,7 +48,7 @@ import {
 	ComparisonOperator,
 	LogicalOperator,
 	SortDirection,
-	type IComparator,
+	type EntityCondition,
 	type IComparatorGroup
 } from "@twin.org/entity";
 import {
@@ -562,7 +562,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				streamModel["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			const result = await JsonLdProcessor.compact(streamModel, streamModel["@context"]);
+			const result = await JsonLdProcessor.compact(streamModel, streamModel["@context"], {
+				compactArrays: false
+			});
 			return {
 				stream: result,
 				cursor: returnCursor
@@ -635,7 +637,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 * @returns The entities, which can be partial if a limited keys list was provided.
 	 */
 	public async query(
-		conditions?: IComparator[],
+		conditions?: EntityCondition<IAuditableItemStream>,
 		orderBy?: keyof Pick<IAuditableItemStream, "dateCreated" | "dateModified">,
 		orderByDirection?: SortDirection,
 		properties?: (keyof IAuditableItemStream)[],
@@ -661,15 +663,8 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				propertiesToReturn = propertiesToReturn.filter(p => p !== "entries");
 			}
 
-			conditions ??= [];
-
 			const results = await this._streamStorage.query(
-				conditions.length > 0
-					? {
-							conditions,
-							logicalOperator: LogicalOperator.And
-						}
-					: undefined,
+				conditions,
 				[
 					{
 						property: orderProperty,
@@ -693,7 +688,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				)
 			};
 
-			const result = await JsonLdProcessor.compact(list, list["@context"]);
+			const result = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result,
 				cursor: results.cursor
@@ -869,7 +866,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				entry.verification = result.verification;
 			}
 
-			const result2 = await JsonLdProcessor.compact(entry, entry["@context"]);
+			const result2 = await JsonLdProcessor.compact(entry, entry["@context"], {
+				compactArrays: false
+			});
 			return result2;
 		} catch (error) {
 			throw new GeneralError(
@@ -1192,7 +1191,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	public async getEntries(
 		streamId?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
 			limit?: number;
@@ -1259,7 +1258,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				list["@context"].push(ImmutableProofContexts.Context);
 			}
 
-			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result2,
 				cursor: result.cursor
@@ -1289,7 +1290,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	public async getEntryObjects(
 		streamId?: string,
 		options?: {
-			conditions?: IComparator[];
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			limit?: number;
 			cursor?: string;
@@ -1349,7 +1350,9 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 				[SchemaOrgTypes.ItemListElement]: result.entries.map(m => m.entryObject)
 			};
 
-			const result2 = await JsonLdProcessor.compact(list, list["@context"]);
+			const result2 = await JsonLdProcessor.compact(list, list["@context"], {
+				compactArrays: false
+			});
 			return {
 				entries: result2,
 				cursor: result.cursor
@@ -1643,7 +1646,7 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		streamId?: string,
 		includeDeleted?: boolean,
 		verifyEntries?: boolean,
-		conditions?: IComparator[],
+		conditions?: EntityCondition<IAuditableItemStreamEntry>,
 		sortDirection?: SortDirection,
 		propertiesToReturn?: (keyof AuditableItemStreamEntry)[],
 		limit?: number,
@@ -1654,10 +1657,10 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	}> {
 		const needToVerify = verifyEntries ?? false;
 
-		const combinedConditions: IComparator[] = [];
+		const andGroups: EntityCondition<IAuditableItemStreamEntry>[] = [];
 
 		if (Is.stringValue(streamId)) {
-			combinedConditions.push({
+			andGroups.push({
 				property: "streamId",
 				comparison: ComparisonOperator.Equals,
 				value: streamId
@@ -1672,11 +1675,15 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 		}
 
 		if (!(includeDeleted ?? false)) {
-			combinedConditions.push({
+			andGroups.push({
 				property: "dateDeleted",
 				comparison: ComparisonOperator.Equals,
 				value: undefined
 			});
+		}
+
+		if (conditions !== undefined) {
+			andGroups.push(conditions);
 		}
 
 		// If we need to verify the entries, we need to make sure we have
@@ -1692,15 +1699,13 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 			}
 		}
 
-		if (Is.arrayValue(conditions)) {
-			combinedConditions.push(...conditions);
-		}
+		const finalConditions: EntityCondition<IAuditableItemStream> = {
+			logicalOperator: LogicalOperator.And,
+			conditions: andGroups
+		};
 
 		const result = await this._streamEntryStorage.query(
-			{
-				conditions: combinedConditions,
-				logicalOperator: LogicalOperator.And
-			},
+			finalConditions,
 			[
 				{
 					property: "dateCreated",

@@ -2086,18 +2086,20 @@ describe("AuditableItemStreamService", () => {
 
 		const entriesAndCursor = await service.getEntries(streamId, {
 			verifyEntries: true,
-			conditions: [
-				{
-					property: "entryObject.@type",
-					comparison: ComparisonOperator.Equals,
-					value: "Note"
-				},
-				{
-					property: "entryObject.content",
-					comparison: ComparisonOperator.Equals,
-					value: "This is an entry note 2"
-				}
-			]
+			conditions: {
+				conditions: [
+					{
+						property: "entryObject.@type",
+						comparison: ComparisonOperator.Equals,
+						value: "Note"
+					},
+					{
+						property: "entryObject.content",
+						comparison: ComparisonOperator.Equals,
+						value: "This is an entry note 2"
+					}
+				]
+			}
 		});
 		const entryStore = await streamEntryStorage.getStore();
 
@@ -2174,13 +2176,15 @@ describe("AuditableItemStreamService", () => {
 		});
 
 		const entriesAndCursor = await service.getEntries(undefined, {
-			conditions: [
-				{
-					property: "entryObject.@type",
-					comparison: ComparisonOperator.Equals,
-					value: "Note"
-				}
-			]
+			conditions: {
+				conditions: [
+					{
+						property: "entryObject.@type",
+						comparison: ComparisonOperator.Equals,
+						value: "Note"
+					}
+				]
+			}
 		});
 
 		expect(entriesAndCursor.entries["@context"]).toEqual([

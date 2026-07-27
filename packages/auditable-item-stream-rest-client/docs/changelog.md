@@ -1,5 +1,82 @@
 # Changelog
 
+## [0.9.1-next.4](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.3...auditable-item-stream-rest-client-v0.9.1-next.4) (2026-07-14)
+
+
+### Miscellaneous Chores
+
+* **auditable-item-stream-rest-client:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.1-next.3 to 0.9.1-next.4
+
+## [0.9.1-next.3](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.2...auditable-item-stream-rest-client-v0.9.1-next.3) (2026-06-30)
+
+
+### Features
+
+* rest enhancements ([99d7f21](https://github.com/iotaledger/twin-auditable-item-stream/commit/99d7f2116fb1aab871d98ee51458876c5328620b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.1-next.2 to 0.9.1-next.3
+
+## [0.9.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.1...auditable-item-stream-rest-client-v0.9.1-next.2) (2026-06-29)
+
+
+### Features
+
+* enhanced rest testing ([#101](https://github.com/iotaledger/twin-auditable-item-stream/issues/101)) ([3bccb47](https://github.com/iotaledger/twin-auditable-item-stream/commit/3bccb479295dd3d8a92a728f8fc2116791c71d62))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.1-next.1 to 0.9.1-next.2
+
+## [0.9.1-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.1-next.0...auditable-item-stream-rest-client-v0.9.1-next.1) (2026-06-26)
+
+
+### Features
+
+* add closable stream ([#59](https://github.com/iotaledger/twin-auditable-item-stream/issues/59)) ([26d3d08](https://github.com/iotaledger/twin-auditable-item-stream/commit/26d3d0887e1e57ca81859be5b56e853335a88d78))
+* add context id features ([#28](https://github.com/iotaledger/twin-auditable-item-stream/issues/28)) ([10d788a](https://github.com/iotaledger/twin-auditable-item-stream/commit/10d788abfd73fdafe40b9218b399c4d652be2370))
+* add number of items ([#47](https://github.com/iotaledger/twin-auditable-item-stream/issues/47)) ([149fc9f](https://github.com/iotaledger/twin-auditable-item-stream/commit/149fc9f505a86af0578551c09f7e8aa763f01be7))
+* add validate-locales ([4babc73](https://github.com/iotaledger/twin-auditable-item-stream/commit/4babc7331f7fed61450fe2e2d8eccee52367f2be))
+* add validation and create structural changes ([#56](https://github.com/iotaledger/twin-auditable-item-stream/issues/56)) ([f7183b4](https://github.com/iotaledger/twin-auditable-item-stream/commit/f7183b42bf9563f8aa015476b82959fba2936bcd))
+* change close REST route from POST to PUT ([047eb4f](https://github.com/iotaledger/twin-auditable-item-stream/commit/047eb4ff63f5cd4a29fdca006799b8c5fee08ec9))
+* eslint migration to flat config ([bd9cb2e](https://github.com/iotaledger/twin-auditable-item-stream/commit/bd9cb2ea2599300332c76a9c738a6ff437a5cc5b))
+* export remove verifiable on client ([554749b](https://github.com/iotaledger/twin-auditable-item-stream/commit/554749b8369896a69de6392881171023a70f5cf1))
+* query with no stream id ([#53](https://github.com/iotaledger/twin-auditable-item-stream/issues/53)) ([733fb20](https://github.com/iotaledger/twin-auditable-item-stream/commit/733fb209dfdb05a5f031bacd47ceab1901140286))
+* replace nextItem property with Link header ([#37](https://github.com/iotaledger/twin-auditable-item-stream/issues/37)) ([83578f1](https://github.com/iotaledger/twin-auditable-item-stream/commit/83578f19fb964703f1b452c5d13430060e36e620))
+* typescript 6 update ([eb9a4db](https://github.com/iotaledger/twin-auditable-item-stream/commit/eb9a4db5dc693602464ab11b55759a3e86d1ecab))
+* update dependencies ([9ff038b](https://github.com/iotaledger/twin-auditable-item-stream/commit/9ff038b7e76e9fb586be4f2321231f04258ef794))
+* update framework core ([5621601](https://github.com/iotaledger/twin-auditable-item-stream/commit/562160167c5082b9dae1b0bf68482ce2af1e7dce))
+* update immutable proof usage ([#71](https://github.com/iotaledger/twin-auditable-item-stream/issues/71)) ([1fd7c16](https://github.com/iotaledger/twin-auditable-item-stream/commit/1fd7c1666ef77f96e807a9d944e0f31b8f043ae6))
+* use new nameof operators ([d1a3bf8](https://github.com/iotaledger/twin-auditable-item-stream/commit/d1a3bf8369f899fff8fd9d7b3b068f270fd8603d))
+* use shared store mechanism ([#7](https://github.com/iotaledger/twin-auditable-item-stream/issues/7)) ([2aca4b8](https://github.com/iotaledger/twin-auditable-item-stream/commit/2aca4b85b0102f91c90619f02b116541786cf539))
+
+
+### Bug Fixes
+
+* add removeProof to ais REST surface ([#80](https://github.com/iotaledger/twin-auditable-item-stream/issues/80)) ([c1ea8ae](https://github.com/iotaledger/twin-auditable-item-stream/commit/c1ea8aee6aa7b4620b92b88e0406cbf235d92cc3))
+* query params force coercion ([fcdd52c](https://github.com/iotaledger/twin-auditable-item-stream/commit/fcdd52cf8262a3bc19f6e7e9e6ef145890a9c8aa))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.1-next.0 to 0.9.1-next.1
+
 ## [0.9.0](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.9.0...auditable-item-stream-rest-client-v0.9.0) (2026-06-25)
 
 
