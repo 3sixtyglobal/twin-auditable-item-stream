@@ -1384,7 +1384,10 @@ export async function auditableItemStreamCreateEntry(
 	HttpHeaderHelper.buildId(
 		headers,
 		id,
-		HttpUrlHelper.combineOriginPath(publicOrigin, `${baseRouteName}/:streamId/entries/:id`)
+		HttpUrlHelper.combineOriginPath(
+			publicOrigin,
+			`${baseRouteName}/${encodeURIComponent(request.pathParams.id)}/entries/:id`
+		)
 	);
 
 	return {
