@@ -1,6 +1,13 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import {
+	HealthCategory,
+	HealthStatus,
+	type HealthApplicationCallback,
+	type IHealth,
+	type IHealthProviderComponent
+} from "@twin.org/api-models";
+import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamDataTypes,
 	AuditableItemStreamMetricIds,
@@ -24,6 +31,7 @@ import {
 } from "@twin.org/auditable-item-stream-models";
 import { ContextIdHelper, ContextIdKeys, ContextIdStore } from "@twin.org/context";
 import {
+	BaseError,
 	Coerce,
 	ComponentFactory,
 	GeneralError,
@@ -78,7 +86,9 @@ import type { IAuditableItemStreamServiceContext } from "./models/IAuditableItem
 /**
  * Class for performing auditable item stream operations.
  */
-export class AuditableItemStreamService implements IAuditableItemStreamComponent {
+export class AuditableItemStreamService
+	implements IAuditableItemStreamComponent, IHealthProviderComponent
+{
 	/**
 	 * Runtime name for the class.
 	 */
@@ -203,6 +213,55 @@ export class AuditableItemStreamService implements IAuditableItemStreamComponent
 	 */
 	public className(): string {
 		return AuditableItemStreamService.CLASS_NAME;
+	}
+
+	/**
+	 * Runs a set/get/remove cycle against the stream entity storage using the organisation identity
+	 * from the current context.
+	 * @param callback The callback to invoke when a deferred health result is ready.
+	 * @returns The health status of the service.
+	 */
+	public async healthApplication(
+		callback: HealthApplicationCallback
+	): Promise<IHealth[] | undefined> {
+		const contextIds = (await ContextIdStore.getContextIds()) ?? {};
+		const orgId = contextIds[ContextIdKeys.Organization];
+
+		if (!Is.stringValue(orgId)) {
+			return [];
+		}
+
+		try {
+			const healthStream = {
+				id: RandomHelper.generateUuidV7("compact"),
+				dateCreated: new Date().toISOString(),
+				organizationIdentity: orgId,
+				numberOfItems: 0,
+				immutableInterval: 0
+			};
+			await this._streamStorage.set(healthStream);
+			await this._streamStorage.get(healthStream.id);
+			await this._streamStorage.remove(healthStream.id);
+			return [
+				{
+					source: AuditableItemStreamService.CLASS_NAME,
+					category: HealthCategory.Application,
+					status: HealthStatus.Ok,
+					description: "healthDescription"
+				}
+			];
+		} catch (error) {
+			return [
+				{
+					source: AuditableItemStreamService.CLASS_NAME,
+					category: HealthCategory.Application,
+					status: HealthStatus.Error,
+					description: "healthDescription",
+					message: "getStreamFailed",
+					error: BaseError.fromError(error)
+				}
+			];
+		}
 	}
 
 	/**
