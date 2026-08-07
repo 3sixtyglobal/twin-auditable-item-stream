@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.2-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.9.2-next.1...auditable-item-stream-service-v0.9.2-next.2) (2026-08-07)
+
+
+### Features
+
+* add health provider ([#118](https://github.com/iotaledger/twin-auditable-item-stream/issues/118)) ([4ccbe69](https://github.com/iotaledger/twin-auditable-item-stream/commit/4ccbe6914fd687d8598d053861f8cbe9bc363791))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.9.2-next.1 to 0.9.2-next.2
+
 ## [0.9.2-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.9.2-next.0...auditable-item-stream-service-v0.9.2-next.1) (2026-07-30)
 
 
