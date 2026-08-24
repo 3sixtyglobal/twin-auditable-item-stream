@@ -1,5 +1,6 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
+import { HealthCategory, HealthStatus } from "@twin.org/api-models";
 import { TenantIdContextIdHandler } from "@twin.org/api-tenant-processor";
 import {
 	AuditableItemStreamContexts,
@@ -250,6 +251,22 @@ describe("AuditableItemStreamService", () => {
 		backgroundTaskService = currentBackgroundTaskService;
 		ComponentFactory.register("background-task", () => currentBackgroundTaskService);
 		await currentBackgroundTaskService.start();
+
+		ComponentFactory.register("platform", () => ({
+			className: () => "MockPlatform",
+			isMultiTenant: () => false,
+			execute: async (method: () => Promise<void>) => method(),
+			getLocalOriginContext: async () => undefined
+		}));
+
+		ComponentFactory.register("task-scheduler", () => ({
+			className: () => "task-scheduler",
+			addTask: async (taskId: string, times: unknown, taskCallback: () => Promise<void>) => {
+				await taskCallback();
+			},
+			removeTask: async () => {},
+			tasksInfo: async () => ({ tasks: {} })
+		}));
 
 		const immutableProofService = new ImmutableProofService();
 		ComponentFactory.register("immutable-proof", () => immutableProofService);
@@ -1047,7 +1064,7 @@ describe("AuditableItemStreamService", () => {
 		expect(proofIdBefore).toBeDefined();
 		expect(await notarizationStorage.getStore()).toHaveLength(1);
 
-		// Update with no annotation change — proof already exists and org identity is set
+		// Update with no annotation change - proof already exists and org identity is set
 		const result = await service.get(streamId);
 		await service.update({ ...result.stream });
 
@@ -2586,11 +2603,11 @@ describe("AuditableItemStreamService", () => {
 
 		beforeEach(() => {
 			// Clear the Mutex registry so getOrFetchLock always processes a
-			// fresh key — same pattern as the AIG / framework regression tests.
+			// fresh key - same pattern as the AIG / framework regression tests.
 			SharedStore.set("mutexLocks", {});
 		});
 
-		test("parallel createEntry calls all persist — numberOfItems equals PARALLEL_OPS", async () => {
+		test("parallel createEntry calls all persist - numberOfItems equals PARALLEL_OPS", async () => {
 			const service = new AuditableItemStreamService();
 
 			const streamId = await service.create({
@@ -2734,6 +2751,45 @@ describe("AuditableItemStreamService", () => {
 				])
 			);
 			return true;
+		});
+	});
+
+	describe("AuditableItemStreamService health checks", () => {
+		beforeEach(() => {
+			ContextIdStore.getContextIds = vi.fn().mockReturnValue({
+				[ContextIdKeys.Node]: TEST_NODE_IDENTITY,
+				[ContextIdKeys.Tenant]: TEST_TENANT_IDENTITY,
+				[ContextIdKeys.Organization]: TEST_ORGANIZATION_IDENTITY,
+				[ContextIdKeys.User]: TEST_USER_IDENTITY
+			});
+		});
+
+		test("health check returns ok status when stream storage is accessible", async () => {
+			const service = new AuditableItemStreamService();
+			const results = await service.healthApplication(vi.fn());
+			expect(results).toHaveLength(1);
+			const result = results?.[0];
+			expect(result?.category).toBe(HealthCategory.Application);
+			expect(result?.status).toBe(HealthStatus.Ok);
+		});
+
+		test("health check returns ok status on repeated calls", async () => {
+			const service = new AuditableItemStreamService();
+			const results1 = await service.healthApplication(vi.fn());
+			expect(results1?.[0].status).toBe(HealthStatus.Ok);
+			const results2 = await service.healthApplication(vi.fn());
+			expect(results2).toHaveLength(1);
+			expect(results2?.[0].status).toBe(HealthStatus.Ok);
+		});
+
+		test("health check returns empty results without org context", async () => {
+			ContextIdStore.getContextIds = vi.fn().mockReturnValue({
+				[ContextIdKeys.Node]: TEST_NODE_IDENTITY,
+				[ContextIdKeys.Tenant]: TEST_TENANT_IDENTITY
+			});
+			const service = new AuditableItemStreamService();
+			const results = await service.healthApplication(vi.fn());
+			expect(results).toHaveLength(0);
 		});
 	});
 });

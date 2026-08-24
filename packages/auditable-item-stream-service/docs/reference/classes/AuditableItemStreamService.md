@@ -5,6 +5,7 @@ Class for performing auditable item stream operations.
 ## Implements
 
 - `IAuditableItemStreamComponent`
+- `IHealthProviderComponent`
 
 ## Constructors
 
@@ -51,6 +52,33 @@ The class name of the component.
 #### Implementation of
 
 `IAuditableItemStreamComponent.className`
+
+***
+
+### healthApplication() {#healthapplication}
+
+> **healthApplication**(`callback`): `Promise`\<`IHealth`[] \| `undefined`\>
+
+Runs a set/get/remove cycle against the stream entity storage using the organisation identity
+from the current context.
+
+#### Parameters
+
+##### callback
+
+`HealthApplicationCallback`
+
+The callback to invoke when a deferred health result is ready.
+
+#### Returns
+
+`Promise`\<`IHealth`[] \| `undefined`\>
+
+The health status of the service.
+
+#### Implementation of
+
+`IHealthProviderComponent.healthApplication`
 
 ***
 

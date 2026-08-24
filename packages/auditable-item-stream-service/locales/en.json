@@ -23,5 +23,11 @@
 			"streamNotFound": "The stream with the Id \"{notFoundId}\" was not found",
 			"streamEntryNotFound": "The stream entry with the Id \"{notFoundId}\" was not found"
 		}
+	},
+	"health": {
+		"auditableItemStreamService": {
+			"healthDescription": "Auditable item stream service application health check",
+			"getStreamFailed": "Failed to complete the auditable item stream storage health check"
+		}
 	}
 }

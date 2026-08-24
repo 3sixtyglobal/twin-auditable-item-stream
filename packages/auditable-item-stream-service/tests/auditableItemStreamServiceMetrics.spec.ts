@@ -110,7 +110,7 @@ function makeMockTelemetry(): {
 	return { component, created, values };
 }
 
-describe("AuditableItemStreamService — metrics", () => {
+describe("AuditableItemStreamService - metrics", () => {
 	beforeAll(async () => {
 		await setupTestEnv();
 
@@ -201,6 +201,22 @@ describe("AuditableItemStreamService — metrics", () => {
 		ComponentFactory.register("background-task", () => backgroundTask);
 		await backgroundTask.start();
 
+		ComponentFactory.register("platform", () => ({
+			className: () => "MockPlatform",
+			isMultiTenant: () => false,
+			execute: async (method: () => Promise<void>) => method(),
+			getLocalOriginContext: async () => undefined
+		}));
+
+		ComponentFactory.register("task-scheduler", () => ({
+			className: () => "task-scheduler",
+			addTask: async (taskId: string, times: unknown, taskCallback: () => Promise<void>) => {
+				await taskCallback();
+			},
+			removeTask: async () => {},
+			tasksInfo: async () => ({ tasks: {} })
+		}));
+
 		const immutableProofService = new ImmutableProofService();
 		ComponentFactory.register("immutable-proof", () => immutableProofService);
 		await immutableProofService.start();
@@ -245,7 +261,7 @@ describe("AuditableItemStreamService — metrics", () => {
 		expect(ids).toContain(AuditableItemStreamMetricIds.ClosedStreamRejections);
 	});
 
-	test("start() is idempotent — AlreadyExistsError is swallowed", async () => {
+	test("start() is idempotent - AlreadyExistsError is swallowed", async () => {
 		let callCount = 0;
 		const component: ITelemetryComponent = {
 			...makeMockTelemetry().component,
@@ -649,7 +665,7 @@ describe("AuditableItemStreamService — metrics", () => {
 		expect(proofsRemoved[0].value).toBe("inc");
 	});
 
-	test("service without telemetryComponentType — no errors, all operations succeed", async () => {
+	test("service without telemetryComponentType - no errors, all operations succeed", async () => {
 		const service = new AuditableItemStreamService({ config: { defaultImmutableInterval: 0 } });
 
 		const streamId = await service.create({
