@@ -398,7 +398,7 @@ Additional options for the get operation.
 
 ###### conditions?
 
-`EntityCondition`\<[`IAuditableItemStream`](IAuditableItemStream.md)\>
+`EntityCondition`\<[`IAuditableItemStreamEntry`](IAuditableItemStreamEntry.md)\>
 
 The conditions to filter the stream.
 
