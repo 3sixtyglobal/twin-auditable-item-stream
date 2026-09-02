@@ -161,7 +161,7 @@ export interface IAuditableItemStreamComponent extends IComponent {
 	getEntries(
 		streamId?: string,
 		options?: {
-			conditions?: EntityCondition<IAuditableItemStream>;
+			conditions?: EntityCondition<IAuditableItemStreamEntry>;
 			includeDeleted?: boolean;
 			verifyEntries?: boolean;
 			limit?: number;
