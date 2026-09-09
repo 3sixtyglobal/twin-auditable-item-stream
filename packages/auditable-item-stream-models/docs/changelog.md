@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.3-next.1...auditable-item-stream-models-v0.9.3-next.2) (2026-09-09)
+
+
+### Features
+
+* add missing data types ([#130](https://github.com/iotaledger/twin-auditable-item-stream/issues/130)) ([ac53ea9](https://github.com/iotaledger/twin-auditable-item-stream/commit/ac53ea96e8c142f0cb4695c356fdb1e8372f0b78))
+
 ## [0.9.3-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.9.3-next.0...auditable-item-stream-models-v0.9.3-next.1) (2026-09-02)
 
 
