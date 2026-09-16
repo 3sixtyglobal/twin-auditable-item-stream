@@ -10,6 +10,7 @@ import AuditableItemStreamEntryBaseSchema from "../schemas/AuditableItemStreamEn
 import AuditableItemStreamEntryListSchema from "../schemas/AuditableItemStreamEntryList.json" with { type: "json" };
 import AuditableItemStreamEntryObjectListSchema from "../schemas/AuditableItemStreamEntryObjectList.json" with { type: "json" };
 import AuditableItemStreamListSchema from "../schemas/AuditableItemStreamList.json" with { type: "json" };
+import AuditableItemStreamModesSchema from "../schemas/AuditableItemStreamModes.json" with { type: "json" };
 
 /**
  * Handle all the data types for auditable item stream.
@@ -47,6 +48,10 @@ export class AuditableItemStreamDataTypes {
 			{
 				type: "AuditableItemStreamEntryBase",
 				schema: AuditableItemStreamEntryBaseSchema
+			},
+			{
+				type: AuditableItemStreamTypes.StreamModes,
+				schema: AuditableItemStreamModesSchema
 			}
 		];
 

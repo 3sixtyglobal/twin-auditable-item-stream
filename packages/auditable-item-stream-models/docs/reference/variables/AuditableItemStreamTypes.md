@@ -35,3 +35,9 @@ Represents auditable item stream entry list.
 > `readonly` **StreamEntryObjectList**: `"AuditableItemStreamEntryObjectList"` = `"AuditableItemStreamEntryObjectList"`
 
 Represents auditable item stream entry object list.
+
+### StreamModes {#streammodes}
+
+> `readonly` **StreamModes**: `"AuditableItemStreamModes"` = `"AuditableItemStreamModes"`
+
+Represents auditable item stream modes.
