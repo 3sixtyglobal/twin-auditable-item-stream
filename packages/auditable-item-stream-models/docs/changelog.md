@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.10.1-next.1...auditable-item-stream-models-v0.10.1-next.2) (2026-09-18)
+
+
+### Miscellaneous Chores
+
+* **auditable-item-stream-models:** Synchronize repo versions
+
 ## [0.10.1-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.10.1-next.0...auditable-item-stream-models-v0.10.1-next.1) (2026-09-18)
 
 

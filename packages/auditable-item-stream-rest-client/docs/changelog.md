@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.10.1-next.1...auditable-item-stream-rest-client-v0.10.1-next.2) (2026-09-18)
+
+
+### Miscellaneous Chores
+
+* **auditable-item-stream-rest-client:** Synchronize repo versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.10.1-next.1 to 0.10.1-next.2
+
 ## [0.10.1-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-rest-client-v0.10.1-next.0...auditable-item-stream-rest-client-v0.10.1-next.1) (2026-09-18)
 
 

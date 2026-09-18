@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.10.1-next.1...auditable-item-stream-service-v0.10.1-next.2) (2026-09-18)
+
+
+### Bug Fixes
+
+* include deleted cursor ([#140](https://github.com/iotaledger/twin-auditable-item-stream/issues/140)) ([467fa86](https://github.com/iotaledger/twin-auditable-item-stream/commit/467fa86ca062011b06c97fec616cae4723d9ec8e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @twin.org/auditable-item-stream-models bumped from 0.10.1-next.1 to 0.10.1-next.2
+
 ## [0.10.1-next.1](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-service-v0.10.1-next.0...auditable-item-stream-service-v0.10.1-next.1) (2026-09-18)
 
 
