@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1-next.3](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.10.1-next.2...auditable-item-stream-models-v0.10.1-next.3) (2026-09-26)
+
+
+### Features
+
+* compiles schemas ([99f6c86](https://github.com/iotaledger/twin-auditable-item-stream/commit/99f6c86e19956090020d539146a41bcec998f0e4))
+
 ## [0.10.1-next.2](https://github.com/iotaledger/twin-auditable-item-stream/compare/auditable-item-stream-models-v0.10.1-next.1...auditable-item-stream-models-v0.10.1-next.2) (2026-09-18)
 
 
