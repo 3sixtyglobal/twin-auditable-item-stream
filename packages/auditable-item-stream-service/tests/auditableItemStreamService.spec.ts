@@ -276,7 +276,6 @@ describe("AuditableItemStreamService", () => {
 		Date.now = vi
 			.fn()
 			.mockImplementationOnce(() => FIRST_TICK)
-			.mockImplementationOnce(() => FIRST_TICK)
 			.mockImplementation(() => SECOND_TICK);
 
 		let idCounter = 1;

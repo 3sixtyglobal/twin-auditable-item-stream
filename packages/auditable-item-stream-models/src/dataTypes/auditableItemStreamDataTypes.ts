@@ -1,6 +1,9 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
 import { DataTypeHelper } from "@twin.org/data-core";
+import { JsonLdDataTypes } from "@twin.org/data-json-ld";
+import { ImmutableProofDataTypes } from "@twin.org/immutable-proof-models";
+import * as CompiledValidators from "../compiled/validators.js";
 import { AuditableItemStreamContexts } from "../models/auditableItemStreamContexts.js";
 import { AuditableItemStreamTypes } from "../models/auditableItemStreamTypes.js";
 import AuditableItemStreamSchema from "../schemas/AuditableItemStream.json" with { type: "json" };
@@ -20,45 +23,57 @@ export class AuditableItemStreamDataTypes {
 	 * Register all the data types.
 	 */
 	public static registerTypes(): void {
+		// Register the types referenced by the schemas, which are only registered once.
+		JsonLdDataTypes.registerTypes();
+		ImmutableProofDataTypes.registerTypes();
+
 		const types = [
 			{
 				type: AuditableItemStreamTypes.Stream,
-				schema: AuditableItemStreamSchema
+				schema: AuditableItemStreamSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStream
 			},
 			{
 				type: AuditableItemStreamTypes.StreamList,
-				schema: AuditableItemStreamListSchema
+				schema: AuditableItemStreamListSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamList
 			},
 			{
 				type: AuditableItemStreamTypes.StreamEntry,
-				schema: AuditableItemStreamEntrySchema
+				schema: AuditableItemStreamEntrySchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamEntry
 			},
 			{
 				type: AuditableItemStreamTypes.StreamEntryList,
-				schema: AuditableItemStreamEntryListSchema
+				schema: AuditableItemStreamEntryListSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamEntryList
 			},
 			{
 				type: AuditableItemStreamTypes.StreamEntryObjectList,
-				schema: AuditableItemStreamEntryObjectListSchema
+				schema: AuditableItemStreamEntryObjectListSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamEntryObjectList
 			},
 			{
 				type: "AuditableItemStreamBase",
-				schema: AuditableItemStreamBaseSchema
+				schema: AuditableItemStreamBaseSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamBase
 			},
 			{
 				type: "AuditableItemStreamEntryBase",
-				schema: AuditableItemStreamEntryBaseSchema
+				schema: AuditableItemStreamEntryBaseSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamEntryBase
 			},
 			{
 				type: AuditableItemStreamTypes.StreamModes,
-				schema: AuditableItemStreamModesSchema
+				schema: AuditableItemStreamModesSchema,
+				compiledValidator: CompiledValidators.CompiledAuditableItemStreamModes
 			}
 		];
 
 		DataTypeHelper.registerTypes(
 			AuditableItemStreamContexts.Namespace,
 			AuditableItemStreamContexts.JsonLdContext,
-			types.map(t => ({ type: t.type, schema: t.schema }))
+			types
 		);
 	}
 }
