@@ -1,5 +1,5 @@
 {
-	"packages/auditable-item-stream-models": "0.9.3-next.2",
-	"packages/auditable-item-stream-service": "0.9.3-next.2",
-	"packages/auditable-item-stream-rest-client": "0.9.3-next.2"
+	"packages/auditable-item-stream-models": "0.10.1-next.3",
+	"packages/auditable-item-stream-service": "0.10.1-next.3",
+	"packages/auditable-item-stream-rest-client": "0.10.1-next.3"
 }

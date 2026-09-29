@@ -53,6 +53,14 @@
 
 ## Variables
 
+- [CompiledAuditableItemStream](variables/CompiledAuditableItemStream.md)
+- [CompiledAuditableItemStreamBase](variables/CompiledAuditableItemStreamBase.md)
+- [CompiledAuditableItemStreamModes](variables/CompiledAuditableItemStreamModes.md)
+- [CompiledAuditableItemStreamList](variables/CompiledAuditableItemStreamList.md)
+- [CompiledAuditableItemStreamEntry](variables/CompiledAuditableItemStreamEntry.md)
+- [CompiledAuditableItemStreamEntryBase](variables/CompiledAuditableItemStreamEntryBase.md)
+- [CompiledAuditableItemStreamEntryList](variables/CompiledAuditableItemStreamEntryList.md)
+- [CompiledAuditableItemStreamEntryObjectList](variables/CompiledAuditableItemStreamEntryObjectList.md)
 - [AuditableItemStreamContexts](variables/AuditableItemStreamContexts.md)
 - [AuditableItemStreamMetricIds](variables/AuditableItemStreamMetricIds.md)
 - [AuditableItemStreamMetrics](variables/AuditableItemStreamMetrics.md)

@@ -12,7 +12,7 @@ export class AuditableItemStream {
 	/**
 	 * The id of the stream.
 	 */
-	@property({ type: "string", isPrimary: true })
+	@property({ type: "string", isPrimary: true, maxLength: 255 })
 	public id!: string;
 
 	/**
@@ -35,13 +35,13 @@ export class AuditableItemStream {
 	/**
 	 * The identity of the organization which controls the stream.
 	 */
-	@property({ type: "string" })
+	@property({ type: "string", maxLength: 255 })
 	public organizationIdentity!: string;
 
 	/**
 	 * The identity of the user which created the stream.
 	 */
-	@property({ type: "string", optional: true })
+	@property({ type: "string", maxLength: 255, optional: true })
 	public userIdentity?: string;
 
 	/**
@@ -71,12 +71,12 @@ export class AuditableItemStream {
 	/**
 	 * The operation mode for the stream.
 	 */
-	@property({ type: "string", optional: true })
+	@property({ type: "string", maxLength: 16, optional: true })
 	public mode?: AuditableItemStreamModes;
 
 	/**
 	 * The immutable proof id.
 	 */
-	@property({ type: "string", optional: true })
+	@property({ type: "string", maxLength: 255, optional: true })
 	public proofId?: string;
 }

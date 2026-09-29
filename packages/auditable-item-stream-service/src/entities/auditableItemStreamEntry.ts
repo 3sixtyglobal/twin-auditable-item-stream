@@ -11,13 +11,13 @@ export class AuditableItemStreamEntry {
 	/**
 	 * The id of the entry.
 	 */
-	@property({ type: "string", isPrimary: true })
+	@property({ type: "string", isPrimary: true, maxLength: 255 })
 	public id!: string;
 
 	/**
 	 * The stream that the entry belongs to.
 	 */
-	@property({ type: "string" })
+	@property({ type: "string", maxLength: 255 })
 	public streamId!: string;
 
 	/**
@@ -46,7 +46,7 @@ export class AuditableItemStreamEntry {
 	/**
 	 * The identity of the user that added the entry.
 	 */
-	@property({ type: "string", optional: true })
+	@property({ type: "string", maxLength: 255, optional: true })
 	public userIdentity?: string;
 
 	/**
@@ -64,6 +64,6 @@ export class AuditableItemStreamEntry {
 	/**
 	 * The immutable proof id.
 	 */
-	@property({ type: "string", optional: true })
+	@property({ type: "string", maxLength: 255, optional: true })
 	public proofId?: string;
 }

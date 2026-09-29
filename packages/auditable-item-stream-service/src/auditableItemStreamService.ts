@@ -34,6 +34,7 @@ import {
 	BaseError,
 	Coerce,
 	ComponentFactory,
+	Converter,
 	GeneralError,
 	Guards,
 	Is,
@@ -82,6 +83,7 @@ import type { AuditableItemStreamEntry } from "./entities/auditableItemStreamEnt
 import type { IAuditableItemStreamServiceConfig } from "./models/IAuditableItemStreamServiceConfig.js";
 import type { IAuditableItemStreamServiceConstructorOptions } from "./models/IAuditableItemStreamServiceConstructorOptions.js";
 import type { IAuditableItemStreamServiceContext } from "./models/IAuditableItemStreamServiceContext.js";
+import type { IAuditableItemStreamServiceCursor } from "./models/IAuditableItemStreamServiceCursor.js";
 
 /**
  * Class for performing auditable item stream operations.
@@ -1689,6 +1691,44 @@ export class AuditableItemStreamService
 	}
 
 	/**
+	 * Encode the storage cursor and the include deleted flag as a single opaque cursor.
+	 * @param cursor The storage cursor for the next page.
+	 * @param includeDeleted Should deleted entries be included.
+	 * @returns The opaque cursor.
+	 * @internal
+	 */
+	private encodeCursor(cursor: string, includeDeleted: boolean): string {
+		return Converter.bytesToBase64(
+			ObjectHelper.toBytes<IAuditableItemStreamServiceCursor>({
+				c: cursor,
+				includeDeleted
+			})
+		);
+	}
+
+	/**
+	 * Decode an opaque cursor back to the storage cursor and the include deleted flag.
+	 * @param cursor The opaque cursor.
+	 * @returns The storage cursor and the include deleted flag.
+	 * @internal
+	 */
+	private decodeCursor(cursor: string): IAuditableItemStreamServiceCursor {
+		try {
+			const decoded = ObjectHelper.fromBytes<IAuditableItemStreamServiceCursor>(
+				Converter.base64ToBytes(cursor)
+			);
+			if (Is.object(decoded) && Is.stringValue(decoded.c) && Is.boolean(decoded.includeDeleted)) {
+				return decoded;
+			}
+		} catch {
+			// A cursor which is not one of ours is passed through to the storage unchanged, which
+			// rejects it there rather than here.
+		}
+
+		return { c: cursor, includeDeleted: false };
+	}
+
+	/**
 	 * Find stream entries.
 	 * @param streamId The stream id.
 	 * @param includeDeleted Should deleted entries be included.
@@ -1726,11 +1766,14 @@ export class AuditableItemStreamService
 			});
 		}
 
+		// The cursor we hand out wraps the storage cursor together with the flag, so the flag
+		// survives paging without the caller having to repeat it, and only the storage cursor is
+		// passed on to the query.
+		let storageCursor = cursor;
 		if (Is.stringValue(cursor)) {
-			const parts = cursor.split("|");
-			if (parts.length > 1) {
-				includeDeleted = Coerce.boolean(parts[1]);
-			}
+			const decoded = this.decodeCursor(cursor);
+			storageCursor = decoded.c;
+			includeDeleted = decoded.includeDeleted;
 		}
 
 		if (!(includeDeleted ?? false)) {
@@ -1772,17 +1815,16 @@ export class AuditableItemStreamService
 				}
 			],
 			propertiesToReturn,
-			cursor,
+			storageCursor,
 			limit
 		);
 
 		let returnCursor: string | undefined;
 
+		// The cursor is only wrapped when there is a further page, otherwise the caller is handed
+		// a cursor which carries nothing but the flag and asks for the first page again.
 		if (Is.stringValue(result.cursor)) {
-			returnCursor = result.cursor;
-		}
-		if (includeDeleted) {
-			returnCursor = `${returnCursor ?? ""}|true`;
+			returnCursor = this.encodeCursor(result.cursor, includeDeleted ?? false);
 		}
 
 		const entryModels: IAuditableItemStreamEntry[] = [];

@@ -21,6 +21,7 @@ import {
 	BaseError,
 	ComponentFactory,
 	Converter,
+	Is,
 	ObjectHelper,
 	RandomHelper,
 	SharedStore
@@ -274,7 +275,6 @@ describe("AuditableItemStreamService", () => {
 
 		Date.now = vi
 			.fn()
-			.mockImplementationOnce(() => FIRST_TICK)
 			.mockImplementationOnce(() => FIRST_TICK)
 			.mockImplementation(() => SECOND_TICK);
 
@@ -1750,6 +1750,74 @@ describe("AuditableItemStreamService", () => {
 			numberOfItems: 2,
 			proofId: "immutable-proof:019179f26c5072028202020202020202"
 		});
+	});
+
+	test("Pages entries with includeDeleted without repeating the first page", async () => {
+		const service = new AuditableItemStreamService();
+		const streamId = await service.create({
+			"@context": [
+				SchemaOrgContexts.Context,
+				AuditableItemStreamContexts.Context,
+				AuditableItemStreamContexts.ContextCommon
+			],
+			type: AuditableItemStreamTypes.Stream,
+			entries: {
+				type: "ItemList",
+				itemListElement: [
+					{
+						type: AuditableItemStreamTypes.StreamEntry,
+						entryObject: {
+							"@context": "https://www.w3.org/ns/activitystreams",
+							"@type": "Note",
+							content: "paged entry 1"
+						}
+					},
+					{
+						type: AuditableItemStreamTypes.StreamEntry,
+						entryObject: {
+							"@context": "https://www.w3.org/ns/activitystreams",
+							"@type": "Note",
+							content: "paged entry 2"
+						}
+					},
+					{
+						type: AuditableItemStreamTypes.StreamEntry,
+						entryObject: {
+							"@context": "https://www.w3.org/ns/activitystreams",
+							"@type": "Note",
+							content: "paged entry 3"
+						}
+					}
+				]
+			}
+		});
+
+		const all = await service.getEntries(streamId, { includeDeleted: true });
+		const allElements = all.entries.itemListElement ?? [];
+		expect(allElements).toHaveLength(3);
+
+		await service.removeEntry(streamId, allElements[0].id);
+
+		const collected: string[] = [];
+		let cursor: string | undefined;
+		let pages = 0;
+
+		do {
+			const page = await service.getEntries(streamId, {
+				includeDeleted: true,
+				limit: 1,
+				cursor
+			});
+			const elements = page.entries.itemListElement ?? [];
+			expect(elements).toHaveLength(1);
+			collected.push(elements[0].id);
+			cursor = page.cursor;
+			pages++;
+		} while (Is.stringValue(cursor) && pages < 10);
+
+		// Without carrying the flag separately from the storage cursor this loops on page one.
+		expect(pages).toEqual(3);
+		expect(new Set(collected).size).toEqual(3);
 	});
 
 	test("Can delete an entry from the stream", async () => {
