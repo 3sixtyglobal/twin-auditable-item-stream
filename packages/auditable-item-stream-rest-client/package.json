@@ -4,7 +4,7 @@
 	"description": "HTTP client for interacting with auditable stream service endpoints.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream.git",
+		"url": "git+https://github.com/3sixtyglobal/twin-auditable-item-stream.git",
 		"directory": "packages/auditable-item-stream-rest-client"
 	},
 	"author": "martyn.janes@iota.org",
@@ -78,7 +78,7 @@
 		"auditable-item-stream"
 	],
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream/issues"
+		"url": "git+https://github.com/3sixtyglobal/twin-auditable-item-stream/issues"
 	},
 	"homepage": "https://twindev.org"
 }

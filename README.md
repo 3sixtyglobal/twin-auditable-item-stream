@@ -13,3 +13,7 @@ The overall aim is to make audit-friendly event and record timelines straightfor
 ## Contributing
 
 To contribute to this package see the guidelines for building and publishing in [CONTRIBUTING](./CONTRIBUTING.md)
+
+## Origin
+
+This repository is derived from the original [iotaledger/twin-auditable-item-stream](https://github.com/iotaledger/twin-auditable-item-stream) repository.

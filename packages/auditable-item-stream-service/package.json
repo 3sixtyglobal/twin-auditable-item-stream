@@ -4,7 +4,7 @@
 	"description": "Service implementation and REST route generation for managing auditable streams and entries.",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream.git",
+		"url": "git+https://github.com/3sixtyglobal/twin-auditable-item-stream.git",
 		"directory": "packages/auditable-item-stream-service"
 	},
 	"author": "martyn.janes@iota.org",
@@ -104,7 +104,7 @@
 		"business-logic"
 	],
 	"bugs": {
-		"url": "git+https://github.com/iotaledger/twin-auditable-item-stream/issues"
+		"url": "git+https://github.com/3sixtyglobal/twin-auditable-item-stream/issues"
 	},
 	"homepage": "https://twindev.org"
 }
