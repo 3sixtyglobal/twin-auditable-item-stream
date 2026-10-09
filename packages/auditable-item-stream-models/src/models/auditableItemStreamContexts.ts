@@ -9,32 +9,32 @@ export const AuditableItemStreamContexts = {
 	/**
 	 * The canonical RDF namespace URI for Auditable Item Stream.
 	 */
-	Namespace: "https://schema.twindev.org/ais/",
+	Namespace: "https://schema.3sixty.global/ais/",
 
 	/**
 	 * The value to use in context for Auditable Item Stream.
 	 */
-	Context: "https://schema.twindev.org/ais/",
+	Context: "https://schema.3sixty.global/ais/",
 
 	/**
 	 * The JSON-LD Context URL for Auditable Item Stream.
 	 */
-	JsonLdContext: "https://schema.twindev.org/ais/types.jsonld",
+	JsonLdContext: "https://schema.3sixty.global/ais/types.jsonld",
 
 	/**
 	 * The canonical RDF namespace URI for TWIN Common.
 	 */
-	NamespaceCommon: "https://schema.twindev.org/common/",
+	NamespaceCommon: "https://schema.3sixty.global/common/",
 
 	/**
 	 * The value to use in JSON-LD context for TWIN Common.
 	 */
-	ContextCommon: "https://schema.twindev.org/common/",
+	ContextCommon: "https://schema.3sixty.global/common/",
 
 	/**
 	 * The JSON-LD Context URL for TWIN Common.
 	 */
-	JsonLdContextCommon: "https://schema.twindev.org/common/types.jsonld"
+	JsonLdContextCommon: "https://schema.3sixty.global/common/types.jsonld"
 } as const;
 
 /**

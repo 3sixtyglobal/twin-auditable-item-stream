@@ -7,14 +7,14 @@ import type {
 	IAuditableItemStreamEntryList,
 	IAuditableItemStreamEntryObjectList,
 	IAuditableItemStreamList
-} from "@twin.org/auditable-item-stream-models";
+} from "@3sixty/auditable-item-stream-models";
 import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamTypes
-} from "@twin.org/auditable-item-stream-models";
-import { GuardError } from "@twin.org/core";
-import { SchemaOrgContexts, SchemaOrgTypes } from "@twin.org/standards-schema-org";
-import { HttpMethod } from "@twin.org/web";
+} from "@3sixty/auditable-item-stream-models";
+import { GuardError } from "@3sixty/core";
+import { SchemaOrgContexts, SchemaOrgTypes } from "@3sixty/standards-schema-org";
+import { HttpMethod } from "@3sixty/web";
 import { AuditableItemStreamRestClient } from "../src/auditableItemStreamRestClient.js";
 import {
 	createdResponse,

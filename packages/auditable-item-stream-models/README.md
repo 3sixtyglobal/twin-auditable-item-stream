@@ -5,7 +5,7 @@ This package provides the shared model layer for auditable item streams, includi
 ## Installation
 
 ```shell
-npm install @twin.org/auditable-item-stream-models
+npm install @3sixty/auditable-item-stream-models
 ```
 
 ## Examples

@@ -1,9 +1,9 @@
 {
 	"prefix": "twin-ais",
-	"contextUrl": "https://schema.twindev.org/ais/",
+	"contextUrl": "https://schema.3sixty.global/ais/",
 	"additionalContextUrls": {
-		"twin-common": "https://schema.twindev.org/common/",
-		"twin-immutable-proof": "https://schema.twindev.org/immutable-proof/",
+		"twin-common": "https://schema.3sixty.global/common/",
+		"twin-immutable-proof": "https://schema.3sixty.global/immutable-proof/",
 		"sch": "http://schema.org/"
 	},
 	"fixedMappings": {

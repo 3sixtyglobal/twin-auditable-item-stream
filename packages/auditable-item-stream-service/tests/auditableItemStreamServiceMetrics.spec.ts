@@ -1,47 +1,47 @@
 // Copyright 2026 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { TenantIdContextIdHandler } from "@twin.org/api-tenant-processor";
+import { TenantIdContextIdHandler } from "@3sixty/api-tenant-processor";
 import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamMetricIds,
 	AuditableItemStreamModes,
 	AuditableItemStreamTypes,
 	type IAuditableItemStreamBase
-} from "@twin.org/auditable-item-stream-models";
+} from "@3sixty/auditable-item-stream-models";
 import {
 	type BackgroundTask,
 	BackgroundTaskService,
 	initSchema as initSchemaBackgroundTask
-} from "@twin.org/background-task-service";
+} from "@3sixty/background-task-service";
 import {
 	ContextIdHandlerFactory,
 	ContextIdKeys,
 	ContextIdStore,
 	type IContextIds
-} from "@twin.org/context";
-import { AlreadyExistsError, ComponentFactory, Is, RandomHelper } from "@twin.org/core";
-import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
-import { DidContextIdHandler } from "@twin.org/identity-models";
+} from "@3sixty/context";
+import { AlreadyExistsError, ComponentFactory, Is, RandomHelper } from "@3sixty/core";
+import { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
+import { DidContextIdHandler } from "@3sixty/identity-models";
 import {
 	type ImmutableProof,
 	ImmutableProofService,
 	initSchema as initSchemaImmutableProof
-} from "@twin.org/immutable-proof-service";
-import { ModuleHelper } from "@twin.org/modules";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/immutable-proof-service";
+import { ModuleHelper } from "@3sixty/modules";
+import { nameof } from "@3sixty/nameof";
 import {
 	EntityStorageNotarizationConnector,
 	initSchema as initSchemaNotarization,
 	type Notarization
-} from "@twin.org/notarization-connector-entity-storage";
-import { NotarizationConnectorFactory } from "@twin.org/notarization-models";
-import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
+} from "@3sixty/notarization-connector-entity-storage";
+import { NotarizationConnectorFactory } from "@3sixty/notarization-models";
+import { SchemaOrgContexts } from "@3sixty/standards-schema-org";
 import {
 	MetricType,
 	type ITelemetryComponent,
 	type ITelemetryMetric
-} from "@twin.org/telemetry-models";
+} from "@3sixty/telemetry-models";
 import {
 	cleanupTestEnv,
 	setupTestEnv,

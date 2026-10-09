@@ -5,7 +5,7 @@ This package provides a client for calling auditable item stream REST endpoints,
 ## Installation
 
 ```shell
-npm install @twin.org/auditable-item-stream-rest-client
+npm install @3sixty/auditable-item-stream-rest-client
 ```
 
 ## Examples

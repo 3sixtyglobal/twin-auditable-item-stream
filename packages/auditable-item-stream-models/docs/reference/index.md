@@ -1,4 +1,4 @@
-# @twin.org/auditable-item-stream-models
+# @3sixty/auditable-item-stream-models
 
 ## Classes
 

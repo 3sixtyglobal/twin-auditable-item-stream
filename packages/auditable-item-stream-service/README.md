@@ -5,7 +5,7 @@ This package provides the service layer for auditable item streams, including st
 ## Installation
 
 ```shell
-npm install @twin.org/auditable-item-stream-service
+npm install @3sixty/auditable-item-stream-service
 ```
 
 ## Examples

@@ -5,8 +5,8 @@ These snippets show practical client-side workflows for creating streams, managi
 ## AuditableItemStreamRestClient
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'
@@ -17,8 +17,8 @@ console.log(client.className()); // AuditableItemStreamRestClient
 ```
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'
@@ -68,9 +68,9 @@ console.log(stream.numberOfItems); // 1
 ```
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
-import { ComparisonOperator, SortDirection } from '@twin.org/entity';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
+import { ComparisonOperator, SortDirection } from '@3sixty/entity';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'
@@ -98,8 +98,8 @@ console.log(firstPage.cursor); // eyJjdXJzb3IiOiIuLi4ifQ==
 ```
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'
@@ -132,9 +132,9 @@ await client.removeEntry(streamId, entryId);
 ```
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
-import { SortDirection } from '@twin.org/entity';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
+import { SortDirection } from '@3sixty/entity';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'
@@ -161,8 +161,8 @@ console.log(entryObjectList.entries.itemListElement.length); // 20
 ```
 
 ```typescript
-import { AuditableItemStreamRestClient } from '@twin.org/auditable-item-stream-rest-client';
-import type { IBaseRestClientConfig } from '@twin.org/api-models';
+import { AuditableItemStreamRestClient } from '@3sixty/auditable-item-stream-rest-client';
+import type { IBaseRestClientConfig } from '@3sixty/api-models';
 
 const config: IBaseRestClientConfig = {
   endpoint: 'http://localhost:3000'

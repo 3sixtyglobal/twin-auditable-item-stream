@@ -1,7 +1,7 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { type IJsonLdNodeObject, JsonLdTypes } from "@twin.org/data-json-ld";
-import { entity, property, SortDirection } from "@twin.org/entity";
+import { type IJsonLdNodeObject, JsonLdTypes } from "@3sixty/data-json-ld";
+import { entity, property, SortDirection } from "@3sixty/entity";
 
 /**
  * Class describing the auditable item stream entry.

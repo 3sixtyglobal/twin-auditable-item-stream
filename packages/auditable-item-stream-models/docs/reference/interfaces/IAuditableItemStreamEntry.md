@@ -10,7 +10,7 @@ Interface describing an entry for the stream.
 
 ### @context? {#context}
 
-> `optional` **@context?**: \[`"https://schema.twindev.org/ais/"`, `"https://schema.twindev.org/common/"`, `...IJsonLdContextDefinitionElement[]`\]
+> `optional` **@context?**: \[`"https://schema.3sixty.global/ais/"`, `"https://schema.3sixty.global/common/"`, `...IJsonLdContextDefinitionElement[]`\]
 
 JSON-LD Context.
 

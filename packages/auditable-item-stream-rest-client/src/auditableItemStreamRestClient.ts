@@ -1,13 +1,13 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { BaseRestClient } from "@twin.org/api-core";
+import { BaseRestClient } from "@3sixty/api-core";
 import {
 	HttpHeaderHelper,
 	HttpParameterHelper,
 	type IBaseRestClientConfig,
 	type ICreatedResponse,
 	type INoContentResponse
-} from "@twin.org/api-models";
+} from "@3sixty/api-models";
 import type {
 	IAuditableItemStream,
 	IAuditableItemStreamBase,
@@ -38,12 +38,12 @@ import type {
 	IAuditableItemStreamRemoveProofRequest,
 	IAuditableItemStreamUpdateEntryRequest,
 	IAuditableItemStreamUpdateRequest
-} from "@twin.org/auditable-item-stream-models";
-import { Coerce, Guards, Is } from "@twin.org/core";
-import type { IJsonLdNodeObject } from "@twin.org/data-json-ld";
-import type { EntityCondition, SortDirection } from "@twin.org/entity";
-import { nameof } from "@twin.org/nameof";
-import { HeaderTypes, HttpMethod, MimeTypes } from "@twin.org/web";
+} from "@3sixty/auditable-item-stream-models";
+import { Coerce, Guards, Is } from "@3sixty/core";
+import type { IJsonLdNodeObject } from "@3sixty/data-json-ld";
+import type { EntityCondition, SortDirection } from "@3sixty/entity";
+import { nameof } from "@3sixty/nameof";
+import { HeaderTypes, HttpMethod, MimeTypes } from "@3sixty/web";
 
 /**
  * Client for performing auditable item stream through to REST endpoints.

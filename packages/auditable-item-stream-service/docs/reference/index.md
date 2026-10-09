@@ -1,4 +1,4 @@
-# @twin.org/auditable-item-stream-service
+# @3sixty/auditable-item-stream-service
 
 ## Classes
 

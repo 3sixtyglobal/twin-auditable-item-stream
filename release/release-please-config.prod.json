@@ -8,6 +8,7 @@
 	"release-type": "node",
 	"initial-version": "0.0.1",
 	"versioning": "default",
+	"last-release-sha": "c28af254ec3de84564f9390d378f5853dc4f3261",
 	"packages": {
 		"packages/auditable-item-stream-models": {
 			"package-name": "auditable-item-stream-models",

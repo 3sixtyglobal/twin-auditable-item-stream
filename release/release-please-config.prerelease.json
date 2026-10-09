@@ -10,6 +10,7 @@
 	"versioning": "prerelease",
 	"prerelease": true,
 	"prerelease-type": "next",
+	"last-release-sha": "9733f70518c5045b9f13fc969eb35d3b0e6f7bc1",
 	"packages": {
 		"packages/auditable-item-stream-models": {
 			"package-name": "auditable-item-stream-models",

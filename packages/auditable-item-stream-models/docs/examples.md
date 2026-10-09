@@ -5,7 +5,7 @@ Use these examples when you want to initialise the shared data type handlers bef
 ## AuditableItemStreamDataTypes
 
 ```typescript
-import { AuditableItemStreamDataTypes } from '@twin.org/auditable-item-stream-models';
+import { AuditableItemStreamDataTypes } from '@3sixty/auditable-item-stream-models';
 
 AuditableItemStreamDataTypes.registerTypes();
 console.log('Data types registered'); // Data types registered
@@ -16,7 +16,7 @@ import {
   AuditableItemStreamContexts,
   AuditableItemStreamDataTypes,
   AuditableItemStreamTypes
-} from '@twin.org/auditable-item-stream-models';
+} from '@3sixty/auditable-item-stream-models';
 
 AuditableItemStreamDataTypes.registerTypes();
 

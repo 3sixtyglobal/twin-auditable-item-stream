@@ -5,7 +5,7 @@ Use these examples to wire the service with your storage components and run full
 ## AuditableItemStreamService
 
 ```typescript
-import { AuditableItemStreamService, initSchema } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStreamService, initSchema } from '@3sixty/auditable-item-stream-service';
 
 initSchema();
 
@@ -19,7 +19,7 @@ console.log(service.className()); // AuditableItemStreamService
 ```
 
 ```typescript
-import { AuditableItemStreamService } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStreamService } from '@3sixty/auditable-item-stream-service';
 
 const service = new AuditableItemStreamService({
   immutableProofComponentType: 'immutable-proof',
@@ -69,8 +69,8 @@ console.log(stream.numberOfItems); // 1
 ```
 
 ```typescript
-import { AuditableItemStreamService } from '@twin.org/auditable-item-stream-service';
-import { ComparisonOperator, SortDirection } from '@twin.org/entity';
+import { AuditableItemStreamService } from '@3sixty/auditable-item-stream-service';
+import { ComparisonOperator, SortDirection } from '@3sixty/entity';
 
 const service = new AuditableItemStreamService({
   immutableProofComponentType: 'immutable-proof',
@@ -112,7 +112,7 @@ console.log(entryObjects.entries.itemListElement.length); // 10
 ```
 
 ```typescript
-import { AuditableItemStreamService } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStreamService } from '@3sixty/auditable-item-stream-service';
 
 const service = new AuditableItemStreamService({
   immutableProofComponentType: 'immutable-proof',
@@ -147,7 +147,7 @@ console.log(entryObject['@type']); // Message
 ```
 
 ```typescript
-import { AuditableItemStreamService } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStreamService } from '@3sixty/auditable-item-stream-service';
 
 const service = new AuditableItemStreamService({
   immutableProofComponentType: 'immutable-proof',
@@ -166,7 +166,7 @@ console.log(streamId); // ais:0f4f9de65dc44f31b4a474a0cc93ce69
 ## AuditableItemStream
 
 ```typescript
-import { AuditableItemStream } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStream } from '@3sixty/auditable-item-stream-service';
 
 const streamEntity = new AuditableItemStream();
 streamEntity.id = '0f4f9de65dc44f31b4a474a0cc93ce69';
@@ -184,7 +184,7 @@ console.log(streamEntity.numberOfItems); // 2
 ## AuditableItemStreamEntry
 
 ```typescript
-import { AuditableItemStreamEntry } from '@twin.org/auditable-item-stream-service';
+import { AuditableItemStreamEntry } from '@3sixty/auditable-item-stream-service';
 
 const streamEntryEntity = new AuditableItemStreamEntry();
 streamEntryEntity.id = '1c7dd4e0e2a6428fa2d9b8f02fd5ce39';
@@ -204,7 +204,7 @@ console.log(streamEntryEntity.index); // 1
 ## Schema Initialisation
 
 ```typescript
-import { initSchema } from '@twin.org/auditable-item-stream-service';
+import { initSchema } from '@3sixty/auditable-item-stream-service';
 
 initSchema();
 console.log('Entity schemas registered'); // Entity schemas registered

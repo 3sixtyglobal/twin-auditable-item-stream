@@ -1,22 +1,22 @@
 // Copyright 2024 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HealthCategory, HealthStatus } from "@twin.org/api-models";
-import { TenantIdContextIdHandler } from "@twin.org/api-tenant-processor";
+import { HealthCategory, HealthStatus } from "@3sixty/api-models";
+import { TenantIdContextIdHandler } from "@3sixty/api-tenant-processor";
 import {
 	AuditableItemStreamContexts,
 	AuditableItemStreamTypes
-} from "@twin.org/auditable-item-stream-models";
+} from "@3sixty/auditable-item-stream-models";
 import {
 	type BackgroundTask,
 	BackgroundTaskService,
 	initSchema as initSchemaBackgroundTask
-} from "@twin.org/background-task-service";
+} from "@3sixty/background-task-service";
 import {
 	ContextIdHandlerFactory,
 	ContextIdKeys,
 	ContextIdStore,
 	type IContextIds
-} from "@twin.org/context";
+} from "@3sixty/context";
 import {
 	BaseError,
 	ComponentFactory,
@@ -25,26 +25,26 @@ import {
 	ObjectHelper,
 	RandomHelper,
 	SharedStore
-} from "@twin.org/core";
-import { ComparisonOperator, SortDirection } from "@twin.org/entity";
-import { MemoryEntityStorageConnector } from "@twin.org/entity-storage-connector-memory";
-import { EntityStorageConnectorFactory } from "@twin.org/entity-storage-models";
-import { DidContextIdHandler } from "@twin.org/identity-models";
-import type { IImmutableProof } from "@twin.org/immutable-proof-models";
+} from "@3sixty/core";
+import { ComparisonOperator, SortDirection } from "@3sixty/entity";
+import { MemoryEntityStorageConnector } from "@3sixty/entity-storage-connector-memory";
+import { EntityStorageConnectorFactory } from "@3sixty/entity-storage-models";
+import { DidContextIdHandler } from "@3sixty/identity-models";
+import type { IImmutableProof } from "@3sixty/immutable-proof-models";
 import {
 	type ImmutableProof,
 	ImmutableProofService,
 	initSchema as initSchemaImmutableProof
-} from "@twin.org/immutable-proof-service";
-import { ModuleHelper } from "@twin.org/modules";
-import { nameof } from "@twin.org/nameof";
+} from "@3sixty/immutable-proof-service";
+import { ModuleHelper } from "@3sixty/modules";
+import { nameof } from "@3sixty/nameof";
 import {
 	EntityStorageNotarizationConnector,
 	initSchema as initSchemaNotarization,
 	type Notarization
-} from "@twin.org/notarization-connector-entity-storage";
-import { NotarizationConnectorFactory } from "@twin.org/notarization-models";
-import { SchemaOrgContexts } from "@twin.org/standards-schema-org";
+} from "@3sixty/notarization-connector-entity-storage";
+import { NotarizationConnectorFactory } from "@3sixty/notarization-models";
+import { SchemaOrgContexts } from "@3sixty/standards-schema-org";
 import {
 	cleanupTestEnv,
 	setupTestEnv,
@@ -452,8 +452,8 @@ describe("AuditableItemStreamService", () => {
 		const streamId = await service.create({
 			"@context": [
 				"https://schema.org",
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/"
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/"
 			],
 			type: AuditableItemStreamTypes.Stream,
 			annotationObject: {
@@ -585,10 +585,10 @@ describe("AuditableItemStreamService", () => {
 
 		expect(result.stream["@context"]).toEqual(
 			expect.arrayContaining([
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/",
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/",
 				"https://schema.org",
-				"https://schema.twindev.org/immutable-proof/"
+				"https://schema.3sixty.global/immutable-proof/"
 			])
 		);
 		expect(result.stream).toMatchObject({
@@ -723,10 +723,10 @@ describe("AuditableItemStreamService", () => {
 
 		expect(result.stream["@context"]).toEqual(
 			expect.arrayContaining([
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/",
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/",
 				"https://schema.org",
-				"https://schema.twindev.org/immutable-proof/"
+				"https://schema.3sixty.global/immutable-proof/"
 			])
 		);
 		expect(result.stream).toMatchObject({
@@ -1635,10 +1635,10 @@ describe("AuditableItemStreamService", () => {
 
 		expect(entry).toEqual({
 			"@context": [
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/",
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/",
 				"https://schema.org",
-				"https://schema.twindev.org/immutable-proof/"
+				"https://schema.3sixty.global/immutable-proof/"
 			],
 			type: AuditableItemStreamTypes.StreamEntry,
 			id: entryId,
@@ -1915,8 +1915,8 @@ describe("AuditableItemStreamService", () => {
 		const streamId = await service.create({
 			"@context": [
 				"https://schema.org",
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/"
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/"
 			],
 			type: AuditableItemStreamTypes.Stream,
 			annotationObject: {
@@ -2093,7 +2093,7 @@ describe("AuditableItemStreamService", () => {
 				SchemaOrgContexts.Context,
 				AuditableItemStreamContexts.Context,
 				AuditableItemStreamContexts.ContextCommon,
-				"https://schema.twindev.org/immutable-proof/"
+				"https://schema.3sixty.global/immutable-proof/"
 			],
 			type: ["ItemList", "AuditableItemStreamEntryList"],
 			itemListElement: [
@@ -2193,7 +2193,7 @@ describe("AuditableItemStreamService", () => {
 				SchemaOrgContexts.Context,
 				AuditableItemStreamContexts.Context,
 				AuditableItemStreamContexts.ContextCommon,
-				"https://schema.twindev.org/immutable-proof/"
+				"https://schema.3sixty.global/immutable-proof/"
 			],
 			type: ["ItemList", "AuditableItemStreamEntryList"],
 			itemListElement: [
@@ -2384,8 +2384,8 @@ describe("AuditableItemStreamService", () => {
 			await service.create({
 				"@context": [
 					"https://schema.org",
-					"https://schema.twindev.org/ais/",
-					"https://schema.twindev.org/common/"
+					"https://schema.3sixty.global/ais/",
+					"https://schema.3sixty.global/common/"
 				],
 				type: AuditableItemStreamTypes.Stream,
 				entries: {
@@ -2443,8 +2443,8 @@ describe("AuditableItemStreamService", () => {
 			await service.create({
 				"@context": [
 					"https://schema.org",
-					"https://schema.twindev.org/ais/",
-					"https://schema.twindev.org/common/"
+					"https://schema.3sixty.global/ais/",
+					"https://schema.3sixty.global/common/"
 				],
 				type: AuditableItemStreamTypes.Stream,
 				entries: {
@@ -2496,8 +2496,8 @@ describe("AuditableItemStreamService", () => {
 			await service.create({
 				"@context": [
 					"https://schema.org",
-					"https://schema.twindev.org/ais/",
-					"https://schema.twindev.org/common/"
+					"https://schema.3sixty.global/ais/",
+					"https://schema.3sixty.global/common/"
 				],
 				type: AuditableItemStreamTypes.Stream,
 				annotationObject: {
@@ -2609,8 +2609,8 @@ describe("AuditableItemStreamService", () => {
 		const streamId = await service.create({
 			"@context": [
 				"https://schema.org",
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/"
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/"
 			],
 			type: "AuditableItemStream",
 			dateCreated: "2024-08-22T11:56:56.272Z"
@@ -2787,8 +2787,8 @@ describe("AuditableItemStreamService", () => {
 		const streamId = await service.create({
 			"@context": [
 				"https://schema.org",
-				"https://schema.twindev.org/ais/",
-				"https://schema.twindev.org/common/"
+				"https://schema.3sixty.global/ais/",
+				"https://schema.3sixty.global/common/"
 			],
 			type: "AuditableItemStream",
 			dateCreated: "2024-08-22T11:56:56.272Z"

@@ -1,4 +1,4 @@
-# TWIN Auditable Item Stream
+# 3Sixty Auditable Item Stream
 
 This repository provides a complete auditable item stream stack for defining contracts, running stream operations, and consuming stream APIs from client applications. The packages are designed to work together so stream data stays consistent from model definition through to service execution and client integration.
 

@@ -1,8 +1,8 @@
 {
 	"openapi": "3.1.1",
 	"info": {
-		"title": "TWIN - Test Endpoints",
-		"description": "REST API for TWIN - Test Endpoints.",
+		"title": "3Sixty - Test Endpoints",
+		"description": "REST API for 3Sixty - Test Endpoints.",
 		"version": "1.0.0",
 		"license": {
 			"name": "Apache 2.0 License",
@@ -39,15 +39,15 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "https://schema.twindev.org/ais/AuditableItemStreamBase"
+								"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamBase"
 							},
 							"examples": {
 								"auditableItemStreamCreateRequestExample": {
 									"value": {
 										"@context": [
 											"https://schema.org",
-											"https://schema.twindev.org/ais/",
-											"https://schema.twindev.org/common/"
+											"https://schema.3sixty.global/ais/",
+											"https://schema.3sixty.global/common/"
 										],
 										"type": "AuditableItemStream",
 										"annotationObject": {
@@ -231,15 +231,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamList"
 								},
 								"examples": {
 									"auditableItemStreamListResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -249,8 +249,8 @@
 												{
 													"@context": [
 														"https://schema.org",
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStream",
 													"id": "ais:1234567890",
@@ -273,15 +273,15 @@
 							},
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamList"
 								},
 								"examples": {
 									"auditableItemStreamJsonLdListResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -291,8 +291,8 @@
 												{
 													"@context": [
 														"https://schema.org",
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStream",
 													"id": "ais:1234567890",
@@ -499,15 +499,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStream"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStream"
 								},
 								"examples": {
 									"auditableItemStreamGetResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": "AuditableItemStream",
 											"id": "ais:1234567890",
@@ -527,8 +527,8 @@
 												"itemListElement": [
 													{
 														"@context": [
-															"https://schema.twindev.org/ais/",
-															"https://schema.twindev.org/common/"
+															"https://schema.3sixty.global/ais/",
+															"https://schema.3sixty.global/common/"
 														],
 														"type": "AuditableItemStreamEntry",
 														"id": "tst:1234567890",
@@ -550,15 +550,15 @@
 							},
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStream"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStream"
 								},
 								"examples": {
 									"auditableItemStreamJsonLdGetResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": "AuditableItemStream",
 											"id": "ais:1234567890",
@@ -578,8 +578,8 @@
 												"itemListElement": [
 													{
 														"@context": [
-															"https://schema.twindev.org/ais/",
-															"https://schema.twindev.org/common/"
+															"https://schema.3sixty.global/ais/",
+															"https://schema.3sixty.global/common/"
 														],
 														"type": "AuditableItemStreamEntry",
 														"id": "tst:1234567890",
@@ -726,8 +726,8 @@
 									"value": {
 										"@context": [
 											"https://schema.org",
-											"https://schema.twindev.org/ais/",
-											"https://schema.twindev.org/common/"
+											"https://schema.3sixty.global/ais/",
+											"https://schema.3sixty.global/common/"
 										],
 										"type": "AuditableItemStream",
 										"annotationObject": {
@@ -1256,15 +1256,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
 									"auditableItemStreamListEntriesResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -1273,8 +1273,8 @@
 											"itemListElement": [
 												{
 													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStreamEntry",
 													"id": "tst:1234567890",
@@ -1295,15 +1295,15 @@
 							},
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
 									"auditableItemStreamJsonLdListEntriesResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -1312,8 +1312,8 @@
 											"itemListElement": [
 												{
 													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStreamEntry",
 													"id": "tst:1234567890",
@@ -1483,14 +1483,14 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntry"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntry"
 								},
 								"examples": {
 									"auditableItemStreamGetEntryResponseExample": {
 										"value": {
 											"@context": [
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": "AuditableItemStreamEntry",
 											"id": "tst:1234567890",
@@ -1509,14 +1509,14 @@
 							},
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntry"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntry"
 								},
 								"examples": {
 									"auditableItemStreamJsonLdGetEntryResponseExample": {
 										"value": {
 											"@context": [
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": "AuditableItemStreamEntry",
 											"id": "tst:1234567890",
@@ -1926,7 +1926,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
+									"$ref": "https://schema.3sixty.global/json-ld/JsonLdNodeObject"
 								},
 								"examples": {
 									"auditableItemStreamGetEntryObjectResponseExample": {
@@ -2105,15 +2105,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
 									"auditableItemStreamListEntriesNoStreamResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -2122,8 +2122,8 @@
 											"itemListElement": [
 												{
 													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStreamEntry",
 													"id": "tst:1234567890",
@@ -2144,15 +2144,15 @@
 							},
 							"application/ld+json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryList"
 								},
 								"examples": {
 									"auditableItemStreamJsonLdListEntriesNoStreamResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -2161,8 +2161,8 @@
 											"itemListElement": [
 												{
 													"@context": [
-														"https://schema.twindev.org/ais/",
-														"https://schema.twindev.org/common/"
+														"https://schema.3sixty.global/ais/",
+														"https://schema.3sixty.global/common/"
 													],
 													"type": "AuditableItemStreamEntry",
 													"id": "tst:1234567890",
@@ -2357,15 +2357,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryObjectList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryObjectList"
 								},
 								"examples": {
 									"auditableItemStreamListEntryObjectsResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -2540,15 +2540,15 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "https://schema.twindev.org/ais/AuditableItemStreamEntryObjectList"
+									"$ref": "https://schema.3sixty.global/ais/AuditableItemStreamEntryObjectList"
 								},
 								"examples": {
 									"auditableItemStreamListEntryObjectsNoStreamResponseExample": {
 										"value": {
 											"@context": [
 												"https://schema.org",
-												"https://schema.twindev.org/ais/",
-												"https://schema.twindev.org/common/"
+												"https://schema.3sixty.global/ais/",
+												"https://schema.3sixty.global/common/"
 											],
 											"type": [
 												"ItemList",
@@ -2766,7 +2766,7 @@
 				"type": "object",
 				"properties": {
 					"entryObject": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
+						"$ref": "https://schema.3sixty.global/json-ld/JsonLdNodeObject"
 					}
 				},
 				"required": [
@@ -2778,7 +2778,7 @@
 				"type": "object",
 				"properties": {
 					"entryObject": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
+						"$ref": "https://schema.3sixty.global/json-ld/JsonLdNodeObject"
 					}
 				},
 				"required": [
@@ -2797,14 +2797,14 @@
 								"const": "https://schema.org"
 							},
 							{
-								"const": "https://schema.twindev.org/ais/"
+								"const": "https://schema.3sixty.global/ais/"
 							},
 							{
-								"const": "https://schema.twindev.org/common/"
+								"const": "https://schema.3sixty.global/common/"
 							}
 						],
 						"items": {
-							"$ref": "https://schema.twindev.org/json-ld/JsonLdContextDefinitionElement"
+							"$ref": "https://schema.3sixty.global/json-ld/JsonLdContextDefinitionElement"
 						},
 						"minItems": 3,
 						"description": "JSON-LD Context."
@@ -2814,7 +2814,7 @@
 						"description": "JSON-LD Type."
 					},
 					"annotationObject": {
-						"$ref": "https://schema.twindev.org/json-ld/JsonLdNodeObject"
+						"$ref": "https://schema.3sixty.global/json-ld/JsonLdNodeObject"
 					}
 				},
 				"required": [

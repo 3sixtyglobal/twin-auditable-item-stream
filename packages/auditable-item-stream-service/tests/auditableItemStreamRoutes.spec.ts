@@ -1,10 +1,10 @@
 // Copyright 2026 IOTA Stiftung.
 // SPDX-License-Identifier: Apache-2.0.
-import { HttpContextIdKeys, type IHttpRequestContext } from "@twin.org/api-models";
-import type { IAuditableItemStreamComponent } from "@twin.org/auditable-item-stream-models";
-import { ContextIdStore } from "@twin.org/context";
-import { ComponentFactory } from "@twin.org/core";
-import { HeaderTypes, HttpStatusCode } from "@twin.org/web";
+import { HttpContextIdKeys, type IHttpRequestContext } from "@3sixty/api-models";
+import type { IAuditableItemStreamComponent } from "@3sixty/auditable-item-stream-models";
+import { ContextIdStore } from "@3sixty/context";
+import { ComponentFactory } from "@3sixty/core";
+import { HeaderTypes, HttpStatusCode } from "@3sixty/web";
 import { auditableItemStreamCreateEntry } from "../src/auditableItemStreamRoutes.js";
 
 describe("auditableItemStreamRoutes", () => {
